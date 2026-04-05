@@ -1,11 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_ROUTES = ["/login", "/cadastro"];
-const CLIENTE_ROUTES = ["/minha-conta"];
-const ADMIN_ROUTES = ["/dashboard", "/agenda", "/clientes", "/agendamentos", "/profissionais", "/servicos", "/financeiro", "/relatorios", "/configuracoes"];
+// Rotas completamente públicas (sem auth)
+const PUBLIC_ROUTES = ["/login", "/cadastro", "/agendar"];
 
-export async function middleware(request: NextRequest) {
+// Rotas exclusivas do painel admin
+const ADMIN_ROUTES = [
+  "/dashboard", "/agenda", "/clientes", "/agendamentos",
+  "/profissionais", "/servicos", "/financeiro", "/relatorios", "/configuracoes",
+];
+
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -28,15 +33,15 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
 
-  const isPublic = PUBLIC_ROUTES.some((r) => path.startsWith(r));
+  const isPublic = PUBLIC_ROUTES.some((r) => path === r || path.startsWith(r + "/"));
 
   // Não autenticado tentando acessar rota protegida
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Autenticado tentando acessar login/cadastro
-  if (user && isPublic) {
+  // Autenticado tentando acessar login/cadastro → redireciona para área correta
+  if (user && (path.startsWith("/login") || path.startsWith("/cadastro"))) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
