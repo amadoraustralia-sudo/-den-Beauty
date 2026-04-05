@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import EdenLogo from "@/components/EdenLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -53,7 +52,9 @@ export default function LoginPage() {
         style={{ backgroundColor: "var(--brand-800)" }}
       >
         <div className="flex items-center gap-3">
-          <EdenLogo size={36} />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-400)" }}>
+            <span className="text-xs font-bold" style={{ color: "white" }}>EB</span>
+          </div>
           <span className="font-bold text-sm tracking-wide" style={{ color: "white" }}>Éden Beauty</span>
         </div>
 
@@ -87,7 +88,9 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="flex items-center gap-2.5 mb-8 lg:hidden">
-            <EdenLogo size={32} />
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-800)" }}>
+              <span className="text-xs font-bold" style={{ color: "white" }}>EB</span>
+            </div>
             <span className="font-bold text-sm tracking-wide" style={{ color: "var(--text-primary)" }}>Éden Beauty</span>
           </div>
 

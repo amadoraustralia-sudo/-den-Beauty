@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import BookingFlow from "@/components/BookingFlow";
 import Link from "next/link";
-import EdenLogo from "@/components/EdenLogo";
 
 export default async function AgendarPage() {
   const supabase = await createClient();
@@ -39,13 +38,10 @@ export default async function AgendarPage() {
       <header style={{ backgroundColor: "var(--brand-800)", borderBottom: "1px solid rgb(255 255 255 / 0.08)" }}>
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <EdenLogo size={34} />
-            <div>
-              <p className="text-sm font-bold tracking-wide leading-none" style={{ color: "white" }}>Éden Beauty</p>
-              {nomeEstabelecimento !== "Nosso Salão" && nomeEstabelecimento !== "Éden Beauty" && (
-                <p className="text-xs mt-0.5" style={{ color: "rgb(255 255 255 / 0.45)" }}>{nomeEstabelecimento}</p>
-              )}
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-400)" }}>
+              <span className="text-xs font-bold" style={{ color: "white" }}>EB</span>
             </div>
+            <span className="text-sm font-bold tracking-wide" style={{ color: "white" }}>Éden Beauty</span>
           </div>
           {user ? (
             <Link href="/minha-conta" className="text-xs px-3 py-1.5 rounded-lg" style={{ color: "rgb(255 255 255 / 0.7)", background: "rgb(255 255 255 / 0.1)" }}>

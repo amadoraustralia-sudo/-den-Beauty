@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import EdenLogo from "@/components/EdenLogo";
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -60,7 +59,9 @@ export default function CadastroPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex items-center gap-2.5 mb-8">
-          <EdenLogo size={32} />
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-800)" }}>
+            <span className="text-xs font-bold" style={{ color: "white" }}>EB</span>
+          </div>
           <span className="font-bold text-sm tracking-wide" style={{ color: "var(--text-primary)" }}>Éden Beauty</span>
         </div>
 
