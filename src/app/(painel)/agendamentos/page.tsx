@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import Topbar from "@/components/Topbar";
 import Link from "next/link";
 import AgendamentoStatusMenu from "@/components/AgendamentoStatusMenu";
+import AgendamentosFiltros from "@/components/AgendamentosFiltros";
+import { Suspense } from "react";
 
 const statusBadge: Record<string, { cls: string; label: string }> = {
   confirmado: { cls: "badge badge-green",  label: "Confirmado" },
@@ -47,44 +49,9 @@ export default async function AgendamentosPage({
       <div className="p-6">
         <div className="card overflow-hidden">
           {/* Filtros */}
-          <form className="flex gap-3 px-5 py-3.5 flex-wrap" style={{ borderBottom: "1px solid var(--border)" }}>
-            <select
-              name="status"
-              defaultValue={filtroStatus ?? ""}
-              onChange={(e) => {
-                const url = new URL(window.location.href);
-                if (e.target.value) url.searchParams.set("status", e.target.value);
-                else url.searchParams.delete("status");
-                window.location.href = url.toString();
-              }}
-              className="input select"
-              style={{ width: "auto", minWidth: 160 }}
-            >
-              <option value="">Todos os status</option>
-              <option value="aguardando">Aguardando</option>
-              <option value="confirmado">Confirmado</option>
-              <option value="concluido">Concluído</option>
-              <option value="cancelado">Cancelado</option>
-            </select>
-            <input
-              type="date"
-              name="data"
-              defaultValue={filtroData ?? ""}
-              onChange={(e) => {
-                const url = new URL(window.location.href);
-                if (e.target.value) url.searchParams.set("data", e.target.value);
-                else url.searchParams.delete("data");
-                window.location.href = url.toString();
-              }}
-              className="input"
-              style={{ width: "auto" }}
-            />
-            {(filtroStatus || filtroData) && (
-              <Link href="/agendamentos" className="btn btn-secondary" style={{ fontSize: "0.8125rem" }}>
-                Limpar filtros
-              </Link>
-            )}
-          </form>
+          <Suspense fallback={<div style={{ height: 56, borderBottom: "1px solid var(--border)" }} />}>
+            <AgendamentosFiltros />
+          </Suspense>
 
           {!agendamentos || agendamentos.length === 0 ? (
             <div className="empty-state">
