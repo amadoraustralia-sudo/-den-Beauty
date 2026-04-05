@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import EdenLogo from "@/components/EdenLogo";
 
 const links = [
   { href: "/minha-conta", label: "Início" },
@@ -26,17 +27,9 @@ export default function ClienteNav() {
       <div className="max-w-2xl mx-auto px-4">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
-          <Link href="/minha-conta" className="flex items-center gap-2">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: "var(--brand-400)" }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m14.7 6.3-8.4 8.4a1 1 0 0 0-.3.7V18h2.6a1 1 0 0 0 .7-.3l8.4-8.4"/>
-                <path d="m16 4 4 4"/>
-              </svg>
-            </div>
-            <span className="text-sm font-semibold" style={{ color: "white" }}>Studio</span>
+          <Link href="/minha-conta" className="flex items-center gap-2.5">
+            <EdenLogo size={30} />
+            <span className="text-sm font-bold tracking-wide" style={{ color: "white" }}>Éden Beauty</span>
           </Link>
 
           {/* Nav links */}

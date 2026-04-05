@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import EdenLogo from "@/components/EdenLogo";
 
 const navGroups = [
   {
@@ -136,18 +137,12 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-5 py-5 border-b" style={{ borderColor: "rgb(255 255 255 / 0.08)" }}>
         <div className="flex items-center gap-3">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: "var(--brand-400)" }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m14.7 6.3-8.4 8.4a1 1 0 0 0-.3.7V18h2.6a1 1 0 0 0 .7-.3l8.4-8.4"/>
-              <path d="m16 4 4 4"/>
-            </svg>
+          <div className="flex-shrink-0">
+            <EdenLogo size={38} />
           </div>
           <div>
-            <p className="font-semibold text-sm leading-none" style={{ color: "var(--text-inverse)" }}>
-              Studio
+            <p className="font-bold text-sm leading-none tracking-wide" style={{ color: "white" }}>
+              Éden Beauty
             </p>
             <p className="text-xs mt-0.5" style={{ color: "rgb(255 255 255 / 0.4)" }}>
               Gestão

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import BookingFlow from "@/components/BookingFlow";
 import Link from "next/link";
+import EdenLogo from "@/components/EdenLogo";
 
 export default async function AgendarPage() {
   const supabase = await createClient();
@@ -36,15 +37,15 @@ export default async function AgendarPage() {
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
       {/* Header público */}
       <header style={{ backgroundColor: "var(--brand-800)", borderBottom: "1px solid rgb(255 255 255 / 0.08)" }}>
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--brand-400)" }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m14.7 6.3-8.4 8.4a1 1 0 0 0-.3.7V18h2.6a1 1 0 0 0 .7-.3l8.4-8.4"/>
-                <path d="m16 4 4 4"/>
-              </svg>
+        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <EdenLogo size={34} />
+            <div>
+              <p className="text-sm font-bold tracking-wide leading-none" style={{ color: "white" }}>Éden Beauty</p>
+              {nomeEstabelecimento !== "Nosso Salão" && nomeEstabelecimento !== "Éden Beauty" && (
+                <p className="text-xs mt-0.5" style={{ color: "rgb(255 255 255 / 0.45)" }}>{nomeEstabelecimento}</p>
+              )}
             </div>
-            <span className="text-sm font-semibold" style={{ color: "white" }}>{nomeEstabelecimento}</span>
           </div>
           {user ? (
             <Link href="/minha-conta" className="text-xs px-3 py-1.5 rounded-lg" style={{ color: "rgb(255 255 255 / 0.7)", background: "rgb(255 255 255 / 0.1)" }}>

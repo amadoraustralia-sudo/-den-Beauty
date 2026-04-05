@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import EdenLogo from "@/components/EdenLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -52,16 +53,8 @@ export default function LoginPage() {
         style={{ backgroundColor: "var(--brand-800)" }}
       >
         <div className="flex items-center gap-3">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: "var(--brand-400)" }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m14.7 6.3-8.4 8.4a1 1 0 0 0-.3.7V18h2.6a1 1 0 0 0 .7-.3l8.4-8.4"/>
-              <path d="m16 4 4 4"/>
-            </svg>
-          </div>
-          <span className="font-semibold text-sm" style={{ color: "var(--text-inverse)" }}>Studio</span>
+          <EdenLogo size={36} />
+          <span className="font-bold text-sm tracking-wide" style={{ color: "white" }}>Éden Beauty</span>
         </div>
 
         <div>
@@ -93,13 +86,9 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--brand-800)" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m14.7 6.3-8.4 8.4a1 1 0 0 0-.3.7V18h2.6a1 1 0 0 0 .7-.3l8.4-8.4"/><path d="m16 4 4 4"/>
-              </svg>
-            </div>
-            <span className="font-semibold text-sm" style={{ color: "var(--text-primary)" }}>Studio</span>
+          <div className="flex items-center gap-2.5 mb-8 lg:hidden">
+            <EdenLogo size={32} />
+            <span className="font-bold text-sm tracking-wide" style={{ color: "var(--text-primary)" }}>Éden Beauty</span>
           </div>
 
           <div className="mb-7">
