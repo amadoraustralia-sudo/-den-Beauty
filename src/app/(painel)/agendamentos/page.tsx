@@ -37,16 +37,17 @@ export default async function AgendamentosPage({
         title="Agendamentos"
         subtitle="Todos os agendamentos do salão"
         actions={
-          <Link href="/agendamentos/novo" className="btn btn-primary">
+          <Link href="/agendamentos/novo" className="btn btn-primary" style={{ fontSize: "0.8125rem" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            Novo agendamento
+            <span className="hidden sm:inline">Novo agendamento</span>
+            <span className="sm:hidden">Novo</span>
           </Link>
         }
       />
 
-      <div className="p-6">
+      <div className="p-3 lg:p-6">
         <div className="card overflow-hidden">
           {/* Filtros */}
           <Suspense fallback={<div style={{ height: 56, borderBottom: "1px solid var(--border)" }} />}>
@@ -62,55 +63,96 @@ export default async function AgendamentosPage({
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Data / Hora</th>
-                    <th>Cliente</th>
-                    <th>Serviço</th>
-                    <th>Profissional</th>
-                    <th>Valor</th>
-                    <th>Status</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {agendamentos.map((a) => {
-                    const st = statusBadge[a.status] ?? { cls: "badge badge-gray", label: a.status };
-                    const valor = a.valor ?? (Array.isArray(a.servicos) ? a.servicos[0]?.preco : (a.servicos as { preco?: number } | null)?.preco);
-                    return (
-                      <tr key={a.id}>
-                        <td>
-                          <p className="font-medium text-sm" style={{ color: "var(--text-primary)" }}>
-                            {new Date(a.data + "T00:00:00").toLocaleDateString("pt-BR")}
-                          </p>
-                          <p className="text-xs" style={{ color: "var(--text-muted)" }}>{a.hora?.slice(0, 5)}</p>
-                        </td>
-                        <td className="text-sm" style={{ color: "var(--text-primary)" }}>
+            <>
+              {/* Tabela — desktop */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Data / Hora</th>
+                      <th>Cliente</th>
+                      <th>Serviço</th>
+                      <th>Profissional</th>
+                      <th>Valor</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {agendamentos.map((a) => {
+                      const st = statusBadge[a.status] ?? { cls: "badge badge-gray", label: a.status };
+                      const valor = a.valor ?? (Array.isArray(a.servicos) ? a.servicos[0]?.preco : (a.servicos as { preco?: number } | null)?.preco);
+                      return (
+                        <tr key={a.id}>
+                          <td>
+                            <p className="font-medium text-sm" style={{ color: "var(--text-primary)" }}>
+                              {new Date(a.data + "T00:00:00").toLocaleDateString("pt-BR")}
+                            </p>
+                            <p className="text-xs" style={{ color: "var(--text-muted)" }}>{a.hora?.slice(0, 5)}</p>
+                          </td>
+                          <td className="text-sm" style={{ color: "var(--text-primary)" }}>
+                            {(a.clientes as { nome: string } | null)?.nome ?? "—"}
+                          </td>
+                          <td className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                            {Array.isArray(a.servicos) ? a.servicos[0]?.nome : (a.servicos as { nome: string } | null)?.nome ?? "—"}
+                          </td>
+                          <td className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                            {(a.profissionais as { nome: string } | null)?.nome ?? "—"}
+                          </td>
+                          <td className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                            {valor ? `R$ ${Number(valor).toFixed(2).replace(".", ",")}` : "—"}
+                          </td>
+                          <td><span className={st.cls}>{st.label}</span></td>
+                          <td><AgendamentoStatusMenu id={a.id} status={a.status} /></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Lista compacta — mobile */}
+              <div className="lg:hidden">
+                {agendamentos.map((a, i) => {
+                  const st = statusBadge[a.status] ?? { cls: "badge badge-gray", label: a.status };
+                  const valor = a.valor ?? (Array.isArray(a.servicos) ? a.servicos[0]?.preco : (a.servicos as { preco?: number } | null)?.preco);
+                  const nomeServico = Array.isArray(a.servicos) ? a.servicos[0]?.nome : (a.servicos as { nome: string } | null)?.nome;
+                  return (
+                    <div
+                      key={a.id}
+                      className="flex items-start gap-3 px-4 py-3.5"
+                      style={{ borderBottom: i < agendamentos.length - 1 ? "1px solid var(--border)" : "none" }}
+                    >
+                      <div className="flex-shrink-0 text-center" style={{ minWidth: 44 }}>
+                        <p className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
+                          {new Date(a.data + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                        </p>
+                        <p className="text-xs font-mono" style={{ color: "var(--brand-600)" }}>{a.hora?.slice(0, 5)}</p>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>
                           {(a.clientes as { nome: string } | null)?.nome ?? "—"}
-                        </td>
-                        <td className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                          {Array.isArray(a.servicos) ? a.servicos[0]?.nome : (a.servicos as { nome: string } | null)?.nome ?? "—"}
-                        </td>
-                        <td className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                          {(a.profissionais as { nome: string } | null)?.nome ?? "—"}
-                        </td>
-                        <td className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                          {valor ? `R$ ${Number(valor).toFixed(2).replace(".", ",")}` : "—"}
-                        </td>
-                        <td>
+                        </p>
+                        <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
+                          {nomeServico ?? "—"}{(a.profissionais as { nome: string } | null)?.nome ? ` · ${(a.profissionais as { nome: string }).nome}` : ""}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1.5">
                           <span className={st.cls}>{st.label}</span>
-                        </td>
-                        <td>
-                          <AgendamentoStatusMenu id={a.id} status={a.status} />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          {valor && (
+                            <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+                              R$ {Number(valor).toFixed(2).replace(".", ",")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <AgendamentoStatusMenu id={a.id} status={a.status} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </div>

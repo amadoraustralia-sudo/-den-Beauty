@@ -27,7 +27,12 @@ export default function AgendamentoStatusMenu({ id, status }: { id: string; stat
 
   function handleAcao(novoStatus: "aguardando" | "confirmado" | "concluido" | "cancelado") {
     setOpen(false);
-    startTransition(() => atualizarStatusAgendamento(id, novoStatus));
+    startTransition(async () => {
+      await atualizarStatusAgendamento(id, novoStatus);
+      window.dispatchEvent(new CustomEvent("show-toast", {
+        detail: { message: "Status atualizado.", type: "success" },
+      }));
+    });
   }
 
   return (

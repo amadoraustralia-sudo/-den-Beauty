@@ -52,5 +52,5 @@ export async function salvarConfiguracoes(formData: FormData) {
     });
   }
 
-  redirect("/configuracoes?salvo=1");
+  redirect("/configuracoes?toast=saved");
 }

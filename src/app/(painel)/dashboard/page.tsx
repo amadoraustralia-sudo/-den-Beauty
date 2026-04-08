@@ -36,13 +36,14 @@ export default async function DashboardPage() {
   const semanaAnterior = getDayRange(-1);
 
   const [
-    { count: totalClientes },
+    { count: _totalClientes },
     { data: agendamentosHoje },
     { data: transacoesMes },
     { data: transacoesSemana },
     { data: transacoesAnterior },
     { data: agendamentosSemana },
     { data: clientesInativos },
+    { data: agendamentosMes },
   ] = await Promise.all([
     supabase.from("clientes").select("*", { count: "exact", head: true }),
     supabase.from("agendamentos")
@@ -61,6 +62,10 @@ export default async function DashboardPage() {
       .gte("data", semana.start).lte("data", semana.end),
     supabase.from("clientes")
       .select("id").lt("ultima_visita", new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0]),
+    supabase.from("agendamentos")
+      .select("forma_pagamento, valor")
+      .gte("data", `${mesAtual}-01`)
+      .eq("status", "concluido"),
   ]);
 
   // Métricas
@@ -99,13 +104,40 @@ export default async function DashboardPage() {
     .slice(0, 5)
     .map(([nome, total]) => ({ nome, total }));
 
-  // Formas de pagamento (mock por enquanto)
-  const pagamentos = [
-    { name: "Pix",           value: 42, color: "var(--brand-500)" },
-    { name: "Cartão Crédito",value: 28, color: "var(--brand-300)" },
-    { name: "Cartão Débito", value: 18, color: "var(--brand-200)" },
-    { name: "Dinheiro",      value: 12, color: "#D1E8D3" },
-  ];
+  // Formas de pagamento — dados reais do mês
+  const coresPagamento: Record<string, string> = {
+    pix: "var(--brand-500)",
+    credito: "var(--brand-300)",
+    debito: "var(--brand-200)",
+    dinheiro: "#D1E8D3",
+  };
+  const labelsPagamento: Record<string, string> = {
+    pix: "Pix",
+    credito: "Cartão Crédito",
+    debito: "Cartão Débito",
+    dinheiro: "Dinheiro",
+  };
+  const pagamentoMap: Record<string, number> = {};
+  (agendamentosMes ?? []).forEach((a) => {
+    const key = (a.forma_pagamento ?? "outros").toLowerCase();
+    pagamentoMap[key] = (pagamentoMap[key] ?? 0) + 1;
+  });
+  const totalPag = Object.values(pagamentoMap).reduce((s, v) => s + v, 0) || 1;
+  const pagamentos = Object.entries(pagamentoMap).length > 0
+    ? Object.entries(pagamentoMap)
+        .sort((a, b) => b[1] - a[1])
+        .map(([key, count]) => ({
+          name: labelsPagamento[key] ?? key.charAt(0).toUpperCase() + key.slice(1),
+          value: Math.round((count / totalPag) * 100),
+          color: coresPagamento[key] ?? "#e5e7eb",
+        }))
+    : [{ name: "Sem dados", value: 100, color: "var(--border)" }];
+
+  // Badge de variação semanal
+  const receitaAnterior = transacoesAnterior?.filter((t) => t.tipo === "entrada").reduce((a, t) => a + Number(t.valor), 0) ?? 0;
+  const variacaoSemanal = receitaAnterior > 0
+    ? Math.round(((receitaSemana - receitaAnterior) / receitaAnterior) * 100)
+    : null;
 
   const stats = [
     {
@@ -113,6 +145,7 @@ export default async function DashboardPage() {
       value: String(hoje_count),
       delta: `${concluidos} concluídos`,
       deltaUp: true,
+      href: "/agendamentos",
       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>,
     },
     {
@@ -120,6 +153,7 @@ export default async function DashboardPage() {
       value: `R$ ${receitaMes.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
       delta: "mês atual",
       deltaUp: true,
+      href: "/financeiro",
       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
     },
     {
@@ -127,6 +161,7 @@ export default async function DashboardPage() {
       value: `R$ ${ticketMedio.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
       delta: "esta semana",
       deltaUp: true,
+      href: "/relatorios",
       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>,
     },
     {
@@ -134,6 +169,7 @@ export default async function DashboardPage() {
       value: String(clientesInativos?.length ?? 0),
       delta: "há +30 dias",
       deltaUp: false,
+      href: "/clientes?inativo=true",
       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
     },
   ];
@@ -151,11 +187,11 @@ export default async function DashboardPage() {
         }
       />
 
-      <div className="p-6 space-y-5">
+      <div className="p-3 lg:p-6 space-y-4 lg:space-y-5">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((s) => (
-            <div key={s.label} className="stat-card">
+            <Link key={s.label} href={s.href} className="stat-card" style={{ display: "block", textDecoration: "none", transition: "box-shadow 0.15s" }}>
               <div className="flex items-center justify-between mb-3">
                 <p className="stat-label">{s.label}</p>
                 <span style={{ color: "var(--brand-400)", opacity: 0.7 }}>{s.icon}</span>
@@ -164,7 +200,7 @@ export default async function DashboardPage() {
               <p className={`stat-delta ${s.deltaUp ? "stat-delta-up" : "stat-delta-down"}`}>
                 {s.delta}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
 
@@ -179,9 +215,11 @@ export default async function DashboardPage() {
                   Comparado com a semana anterior
                 </p>
               </div>
-              <span className="badge badge-green">
-                +8% vs. semana anterior
-              </span>
+              {variacaoSemanal !== null && (
+                <span className={`badge ${variacaoSemanal >= 0 ? "badge-green" : "badge-red"}`}>
+                  {variacaoSemanal >= 0 ? "+" : ""}{variacaoSemanal}% vs. semana anterior
+                </span>
+              )}
             </div>
             <RevenueChart data={chartData} />
           </div>

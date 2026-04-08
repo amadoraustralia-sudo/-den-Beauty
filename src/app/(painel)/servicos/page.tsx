@@ -25,7 +25,7 @@ export default async function ServicosPage() {
         }
       />
 
-      <div className="p-6 space-y-6">
+      <div className="p-3 lg:p-6 space-y-4 lg:space-y-6">
         {servicos?.length === 0 || !servicos ? (
           <div className="card">
             <div className="empty-state">
@@ -43,40 +43,62 @@ export default async function ServicosPage() {
                   {cat}
                 </h4>
                 <div className="card overflow-hidden">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Serviço</th>
-                        <th>Duração</th>
-                        <th>Preço</th>
-                        <th>Status</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((s) => (
-                        <tr key={s.id}>
-                          <td>
-                            <p className="font-medium text-sm" style={{ color: "var(--text-primary)" }}>{s.nome}</p>
-                          </td>
-                          <td className="text-sm" style={{ color: "var(--text-secondary)" }}>{s.duracao_min} min</td>
-                          <td className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                            R$ {Number(s.preco).toFixed(2).replace(".", ",")}
-                          </td>
-                          <td>
-                            <span className={`badge ${s.ativo ? "badge-green" : "badge-gray"}`}>
-                              {s.ativo ? "Ativo" : "Inativo"}
-                            </span>
-                          </td>
-                          <td>
-                            <button className="btn btn-ghost" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.625rem" }}>
-                              Editar
-                            </button>
-                          </td>
+                  {/* Tabela — desktop */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>Serviço</th>
+                          <th>Duração</th>
+                          <th>Preço</th>
+                          <th>Status</th>
+                          <th></th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {items.map((s) => (
+                          <tr key={s.id}>
+                            <td>
+                              <p className="font-medium text-sm" style={{ color: "var(--text-primary)" }}>{s.nome}</p>
+                              {s.descricao && <p className="text-xs" style={{ color: "var(--text-muted)" }}>{s.descricao}</p>}
+                            </td>
+                            <td className="text-sm" style={{ color: "var(--text-secondary)" }}>{s.duracao_min} min</td>
+                            <td className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                              R$ {Number(s.preco).toFixed(2).replace(".", ",")}
+                            </td>
+                            <td>
+                              <span className={`badge ${s.ativo ? "badge-green" : "badge-gray"}`}>
+                                {s.ativo ? "Ativo" : "Inativo"}
+                              </span>
+                            </td>
+                            <td>
+                              <button className="btn btn-ghost" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.625rem" }}>Editar</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Lista — mobile */}
+                  <div className="sm:hidden">
+                    {items.map((s, i) => (
+                      <div key={s.id} className="flex items-center gap-3 px-4 py-3.5" style={{ borderBottom: i < items.length - 1 ? "1px solid var(--border)" : "none" }}>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{s.nome}</p>
+                          <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{s.duracao_min} min</p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-sm font-semibold" style={{ color: "var(--brand-600)" }}>
+                            R$ {Number(s.preco).toFixed(2).replace(".", ",")}
+                          </span>
+                          <span className={`badge ${s.ativo ? "badge-green" : "badge-gray"}`}>
+                            {s.ativo ? "Ativo" : "Inativo"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             );

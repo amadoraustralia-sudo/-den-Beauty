@@ -69,7 +69,7 @@ export default async function FinanceiroPage({
         }
       />
 
-      <div className="p-6 space-y-6">
+      <div className="p-3 lg:p-6 space-y-4 lg:space-y-6">
         {/* Navegação de mês */}
         <div className="flex items-center justify-between">
           <Link

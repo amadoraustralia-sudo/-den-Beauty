@@ -109,9 +109,9 @@ export default function CadastroPage() {
             />
             <span className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
               Concordo com os{" "}
-              <a href="#" style={{ color: "var(--brand-600)" }}>Termos de Uso</a>
+              <a href="/termos" target="_blank" style={{ color: "var(--brand-600)" }}>Termos de Uso</a>
               {" "}e autorizo o uso dos meus dados conforme a{" "}
-              <a href="#" style={{ color: "var(--brand-600)" }}>Política de Privacidade</a>
+              <a href="/privacidade" target="_blank" style={{ color: "var(--brand-600)" }}>Política de Privacidade</a>
               {" "}(LGPD).
             </span>
           </label>

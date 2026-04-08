@@ -49,7 +49,7 @@ export default async function ProfissionaisPage() {
         }
       />
 
-      <div className="p-6">
+      <div className="p-3 lg:p-6">
         {!profissionais || profissionais.length === 0 ? (
           <div className="card">
             <div className="empty-state">

@@ -2,6 +2,7 @@ import Topbar from "@/components/Topbar";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { salvarConfiguracoes } from "./actions";
+import UnsavedChangesGuard from "@/components/UnsavedChangesGuard";
 
 const DIAS = [
   { key: "seg", label: "Segunda" },
@@ -30,7 +31,7 @@ export default async function ConfiguracoesPage({
     <>
       <Topbar title="Configurações" subtitle="Dados e preferências do estabelecimento" />
 
-      <div className="p-6">
+      <div className="p-3 lg:p-6">
         {salvo === "1" && (
           <div className="mb-6 rounded-xl p-4 flex gap-3 items-center" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -45,8 +46,9 @@ export default async function ConfiguracoesPage({
           </div>
         )}
 
+        <UnsavedChangesGuard>
         <form action={salvarConfiguracoes}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
             {/* Coluna principal */}
             <div className="lg:col-span-2 space-y-5">
               {/* Dados do salão */}
@@ -198,6 +200,7 @@ export default async function ConfiguracoesPage({
             </div>
           </div>
         </form>
+        </UnsavedChangesGuard>
       </div>
     </>
   );

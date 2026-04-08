@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const navGroups = [
@@ -116,6 +117,17 @@ const navGroups = [
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Escuta evento do botão hamburguer no Topbar
+  useEffect(() => {
+    function toggle() { setMobileOpen((v) => !v); }
+    window.addEventListener("toggle-sidebar", toggle);
+    return () => window.removeEventListener("toggle-sidebar", toggle);
+  }, []);
+
+  // Fecha ao navegar
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   async function handleLogout() {
     const supabase = createClient();
@@ -124,22 +136,15 @@ export default function Sidebar() {
     router.refresh();
   }
 
-  return (
+  const sidebarContent = (
     <aside
-      className="flex flex-col h-screen sticky top-0 flex-shrink-0"
-      style={{
-        width: "var(--sidebar-w)",
-        backgroundColor: "var(--brand-800)",
-        borderRight: "1px solid rgb(255 255 255 / 0.06)",
-      }}
+      className="flex flex-col h-full"
+      style={{ backgroundColor: "var(--brand-800)", borderRight: "1px solid rgb(255 255 255 / 0.06)" }}
     >
       {/* Logo */}
-      <div className="px-5 py-5 border-b" style={{ borderColor: "rgb(255 255 255 / 0.08)" }}>
+      <div className="px-5 py-5 border-b flex items-center justify-between" style={{ borderColor: "rgb(255 255 255 / 0.08)" }}>
         <div className="flex items-center gap-3">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: "var(--brand-400)" }}
-          >
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-400)" }}>
             <span className="text-xs font-bold" style={{ color: "white" }}>EB</span>
           </div>
           <div>
@@ -147,6 +152,17 @@ export default function Sidebar() {
             <p className="text-xs mt-0.5" style={{ color: "rgb(255 255 255 / 0.4)" }}>Gestão</p>
           </div>
         </div>
+        {/* Botão fechar no mobile */}
+        <button
+          className="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg"
+          style={{ color: "rgb(255 255 255 / 0.6)" }}
+          onClick={() => setMobileOpen(false)}
+          aria-label="Fechar menu"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
 
       {/* Nav */}
@@ -154,10 +170,7 @@ export default function Sidebar() {
         {navGroups.map((group, gi) => (
           <div key={gi}>
             {group.label && (
-              <p
-                className="px-3 mb-1 text-xs font-semibold uppercase tracking-widest"
-                style={{ color: "rgb(255 255 255 / 0.25)" }}
-              >
+              <p className="px-3 mb-1 text-xs font-semibold uppercase tracking-widest" style={{ color: "rgb(255 255 255 / 0.25)" }}>
                 {group.label}
               </p>
             )}
@@ -186,5 +199,43 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop: sidebar fixa */}
+      <div
+        className="hidden lg:flex flex-col flex-shrink-0"
+        style={{ width: "var(--sidebar-w)", height: "100vh", position: "sticky", top: 0 }}
+      >
+        {sidebarContent}
+      </div>
+
+      {/* Mobile: overlay + drawer */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 flex">
+          {/* Fundo escuro */}
+          <div
+            className="absolute inset-0"
+            style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }}
+            onClick={() => setMobileOpen(false)}
+          />
+          {/* Drawer */}
+          <div
+            className="relative flex flex-col z-50"
+            style={{ width: 280, height: "100%", animation: "slideInLeft 0.22s ease" }}
+          >
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideInLeft {
+          from { transform: translateX(-100%); opacity: 0.5; }
+          to   { transform: translateX(0);     opacity: 1; }
+        }
+      `}</style>
+    </>
   );
 }

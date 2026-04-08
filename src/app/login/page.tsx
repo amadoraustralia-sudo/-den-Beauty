@@ -117,7 +117,7 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="label" style={{ marginBottom: 0 }}>Senha</label>
-                <a href="#" className="text-xs" style={{ color: "var(--brand-500)" }}>
+                <a href="/recuperar-senha" className="text-xs" style={{ color: "var(--brand-500)" }}>
                   Esqueci a senha
                 </a>
               </div>

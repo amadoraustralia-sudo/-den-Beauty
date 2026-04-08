@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { atualizarPerfil } from "./actions";
+import UnsavedChangesGuard from "@/components/UnsavedChangesGuard";
 
 export default async function PerfilPage({
   searchParams,
@@ -42,6 +43,7 @@ export default async function PerfilPage({
         </div>
       )}
 
+      <UnsavedChangesGuard>
       <form action={atualizarPerfil} className="space-y-4">
         <div className="card p-5 space-y-4">
           <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
@@ -98,6 +100,7 @@ export default async function PerfilPage({
           Salvar alterações
         </button>
       </form>
+      </UnsavedChangesGuard>
 
       {/* Informações da conta */}
       <div className="card p-5">
