@@ -1,35 +1,77 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import FormCard from "@/components/FormCard";
 import { criarProfissional } from "./actions";
 
 const especialidades = ["Corte", "Barba", "Coloração", "Escova", "Progressiva", "Hidratação", "Manicure", "Pedicure", "Design de sobrancelha", "Limpeza de pele", "Maquiagem"];
 
-function erroStyle(erros: string[], campo: string) {
-  return erros.includes(campo) ? { borderColor: "var(--danger)", boxShadow: "0 0 0 2px rgb(239 68 68 / 0.15)" } : {};
-}
+const errStyle = { borderColor: "var(--danger)", boxShadow: "0 0 0 2px rgb(239 68 68 / 0.15)" };
 
-export default async function NovoProfissionalPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ erros?: string; erro?: string; msg?: string }>;
-}) {
-  const { erros: errosStr, erro, msg } = await searchParams;
-  const erros = errosStr ? errosStr.split(",") : [];
+export default function NovoProfissionalPage() {
+  const router = useRouter();
+
+  const [fields, setFields] = useState({
+    nome: "", cargo: "", email: "", telefone: "", percentual_comissao: "50", periodo_fechamento: "mensal",
+  });
+  const [especialidadesSel, setEspecialidadesSel] = useState<string[]>([]);
+  const [erros, setErros] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState("");
+  const [pending, setPending] = useState(false);
+
+  function set(field: string, value: string) {
+    setFields((f) => ({ ...f, [field]: value }));
+    if (erros[field]) setErros((e) => { const n = { ...e }; delete n[field]; return n; });
+  }
+
+  function toggleEsp(esp: string) {
+    setEspecialidadesSel((prev) =>
+      prev.includes(esp) ? prev.filter((e) => e !== esp) : [...prev, esp]
+    );
+  }
+
+  function validate() {
+    const e: Record<string, string> = {};
+    if (!fields.nome.trim()) e.nome = "Campo obrigatório";
+    const c = Number(fields.percentual_comissao);
+    if (isNaN(c) || c < 0 || c > 100) e.percentual_comissao = "Valor entre 0 e 100";
+    setErros(e);
+    return Object.keys(e).length === 0;
+  }
+
+  async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
+    ev.preventDefault();
+    if (!validate()) return;
+    setPending(true);
+    setServerError("");
+
+    const fd = new FormData();
+    fd.set("nome", fields.nome);
+    fd.set("cargo", fields.cargo);
+    fd.set("email", fields.email);
+    fd.set("telefone", fields.telefone);
+    fd.set("percentual_comissao", fields.percentual_comissao);
+    fd.set("periodo_fechamento", fields.periodo_fechamento);
+    especialidadesSel.forEach((e) => fd.append("especialidades", e));
+
+    const result = await criarProfissional(fd);
+    if (result?.error) {
+      const msg = result.error.startsWith("db:") ? result.error.slice(3) : "Erro ao salvar. Tente novamente.";
+      setServerError(msg);
+      setPending(false);
+    }
+  }
 
   return (
     <FormCard title="Novo profissional" subtitle="Cadastre um profissional do seu salão" backHref="/profissionais">
-      {erros.length > 0 && (
-        <div className="mb-4 rounded-xl p-3.5 flex gap-2.5" style={{ background: "#fff5f5", border: "1px solid #fecaca" }}>
-          <svg className="flex-shrink-0 mt-0.5" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <p className="text-sm" style={{ color: "#b91c1c" }}>Preencha os campos obrigatórios destacados.</p>
-        </div>
-      )}
-      {erro === "db" && (
+      {serverError && (
         <div className="mb-4 rounded-xl p-3.5" style={{ background: "#fff5f5", border: "1px solid #fecaca" }}>
-          <p className="text-sm" style={{ color: "#b91c1c" }}>Erro ao salvar: {msg ?? "tente novamente."}</p>
+          <p className="text-sm" style={{ color: "#b91c1c" }}>{serverError}</p>
         </div>
       )}
 
-      <form action={criarProfissional} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <h4 className="mb-3" style={{ color: "var(--text-muted)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Dados pessoais
@@ -37,20 +79,33 @@ export default async function NovoProfissionalPage({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label className="label">Nome completo <span style={{ color: "var(--danger)" }}>*</span></label>
-              <input name="nome" placeholder="Ex: Carla Santos" className="input" style={erroStyle(erros, "nome")} />
-              {erros.includes("nome") && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>Campo obrigatório</p>}
+              <input
+                name="nome" placeholder="Ex: Carla Santos" className="input"
+                value={fields.nome} onChange={(e) => set("nome", e.target.value)}
+                style={erros.nome ? errStyle : {}}
+              />
+              {erros.nome && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{erros.nome}</p>}
             </div>
             <div>
               <label className="label">Cargo / Função</label>
-              <input name="cargo" placeholder="Ex: Cabeleireira" className="input" />
+              <input
+                name="cargo" placeholder="Ex: Cabeleireira" className="input"
+                value={fields.cargo} onChange={(e) => set("cargo", e.target.value)}
+              />
             </div>
             <div>
               <label className="label">E-mail</label>
-              <input name="email" type="email" placeholder="profissional@email.com" className="input" />
+              <input
+                name="email" type="email" placeholder="profissional@email.com" className="input"
+                value={fields.email} onChange={(e) => set("email", e.target.value)}
+              />
             </div>
             <div className="sm:col-span-2">
               <label className="label">Telefone / WhatsApp</label>
-              <input name="telefone" type="tel" placeholder="(11) 99999-9999" className="input" />
+              <input
+                name="telefone" type="tel" placeholder="(11) 99999-9999" className="input"
+                value={fields.telefone} onChange={(e) => set("telefone", e.target.value)}
+              />
             </div>
           </div>
         </div>
@@ -64,16 +119,23 @@ export default async function NovoProfissionalPage({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">Comissão (%) <span style={{ color: "var(--danger)" }}>*</span></label>
-              <input name="percentual_comissao" type="number" min="0" max="100" step="0.5" defaultValue="50" className="input" style={erroStyle(erros, "percentual_comissao")} />
-              {erros.includes("percentual_comissao") && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>Valor entre 0 e 100</p>}
+              <input
+                name="percentual_comissao" type="number" min="0" max="100" step="0.5" className="input"
+                value={fields.percentual_comissao} onChange={(e) => set("percentual_comissao", e.target.value)}
+                style={erros.percentual_comissao ? errStyle : {}}
+              />
+              {erros.percentual_comissao && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{erros.percentual_comissao}</p>}
               <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>% sobre cada atendimento concluído</p>
             </div>
             <div>
               <label className="label">Período de fechamento</label>
-              <select name="periodo_fechamento" className="input select">
+              <select
+                name="periodo_fechamento" className="input select"
+                value={fields.periodo_fechamento} onChange={(e) => set("periodo_fechamento", e.target.value)}
+              >
                 <option value="semanal">Semanal</option>
                 <option value="quinzenal">Quinzenal</option>
-                <option value="mensal" defaultValue="mensal">Mensal</option>
+                <option value="mensal">Mensal</option>
               </select>
             </div>
           </div>
@@ -86,20 +148,38 @@ export default async function NovoProfissionalPage({
             Especialidades
           </h4>
           <div className="flex flex-wrap gap-2">
-            {especialidades.map((esp) => (
-              <label key={esp} className="flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer text-sm" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
-                <input type="checkbox" name="especialidades" value={esp} style={{ accentColor: "var(--brand-600)", width: 14, height: 14 }} />
-                {esp}
-              </label>
-            ))}
+            {especialidades.map((esp) => {
+              const ativo = especialidadesSel.includes(esp);
+              return (
+                <button
+                  key={esp} type="button" onClick={() => toggleEsp(esp)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer text-sm transition-colors"
+                  style={{
+                    border: `1px solid ${ativo ? "var(--brand-600)" : "var(--border)"}`,
+                    background: ativo ? "var(--brand-50)" : "var(--surface)",
+                    color: ativo ? "var(--brand-700)" : "var(--text-secondary)",
+                    fontWeight: ativo ? 500 : 400,
+                  }}
+                >
+                  {ativo && (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                  {esp}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         <hr className="divider" />
 
         <div className="flex gap-3 justify-end">
-          <a href="/profissionais" className="btn btn-secondary">Cancelar</a>
-          <button type="submit" className="btn btn-primary">Salvar profissional</button>
+          <button type="button" onClick={() => router.push("/profissionais")} className="btn btn-secondary">Cancelar</button>
+          <button type="submit" className="btn btn-primary" disabled={pending}>
+            {pending ? "Salvando..." : "Salvar profissional"}
+          </button>
         </div>
       </form>
     </FormCard>

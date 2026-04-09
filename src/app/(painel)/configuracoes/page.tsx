@@ -17,9 +17,9 @@ const DIAS = [
 export default async function ConfiguracoesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ salvo?: string; erro?: string }>;
+  searchParams: Promise<{ erro?: string }>;
 }) {
-  const { salvo, erro } = await searchParams;
+  const { erro } = await searchParams;
   const supabase = await createClient();
 
   const { data: config } = await supabase.from("configuracoes").select("*").limit(1).single();
@@ -32,14 +32,6 @@ export default async function ConfiguracoesPage({
       <Topbar title="Configurações" subtitle="Dados e preferências do estabelecimento" />
 
       <div className="p-3 lg:p-6">
-        {salvo === "1" && (
-          <div className="mb-6 rounded-xl p-4 flex gap-3 items-center" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <p className="text-sm font-medium" style={{ color: "#15803d" }}>Configurações salvas com sucesso!</p>
-          </div>
-        )}
         {erro === "nome" && (
           <div className="mb-6 rounded-xl p-4" style={{ background: "#fff5f5", border: "1px solid #fecaca" }}>
             <p className="text-sm" style={{ color: "#b91c1c" }}>O nome do estabelecimento é obrigatório.</p>

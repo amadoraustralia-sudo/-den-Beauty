@@ -18,6 +18,24 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export default function PaymentPieChart({ data }: Props) {
+  const semDados = data.length === 0 || (data.length === 1 && data[0].name === "Sem dados");
+
+  if (semDados) {
+    return (
+      <div className="flex flex-col items-center justify-center py-6 gap-2" style={{ color: "var(--text-muted)" }}>
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity={0.4}>
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+        </svg>
+        <p className="text-sm text-center" style={{ color: "var(--text-muted)" }}>
+          Sem dados suficientes para exibir
+        </p>
+        <p className="text-xs text-center" style={{ color: "var(--text-muted)", opacity: 0.7 }}>
+          Conclua atendimentos com forma de pagamento
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-5">
       <ResponsiveContainer width={100} height={100}>

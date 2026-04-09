@@ -10,22 +10,17 @@ export async function criarServico(formData: FormData) {
   const preco       = parseFloat((formData.get("preco") as string)?.replace(",", "."));
   const descricao   = (formData.get("descricao") as string)?.trim() || null;
 
-  const erros: string[] = [];
-  if (!nome)                          erros.push("nome");
-  if (!categoria)                     erros.push("categoria");
-  if (!duracao_min || duracao_min < 1) erros.push("duracao_min");
-  if (isNaN(preco) || preco < 0)      erros.push("preco");
-
-  if (erros.length > 0) {
-    redirect(`/servicos/novo?erros=${erros.join(",")}`);
-  }
+  if (!nome)                           return { error: "nome" };
+  if (!categoria)                      return { error: "categoria" };
+  if (!duracao_min || duracao_min < 1) return { error: "duracao_min" };
+  if (isNaN(preco) || preco < 0)       return { error: "preco" };
 
   const supabase = await createClient();
   const { error } = await supabase.from("servicos").insert({
     nome, categoria, duracao_min, preco, descricao, ativo: true,
   });
 
-  if (error) redirect(`/servicos/novo?erro=db&msg=${encodeURIComponent(error.message)}`);
+  if (error) return { error: `db:${error.message}` };
 
   redirect("/servicos?toast=criado");
 }

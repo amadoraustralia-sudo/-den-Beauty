@@ -5,8 +5,7 @@ import { redirect } from "next/navigation";
 
 export async function criarCliente(formData: FormData) {
   const nome = (formData.get("nome") as string)?.trim();
-
-  if (!nome) redirect("/clientes/novo?erros=nome");
+  if (!nome) return { error: "O nome é obrigatório." };
 
   const supabase = await createClient();
   const { error } = await supabase.from("clientes").insert({
@@ -19,7 +18,7 @@ export async function criarCliente(formData: FormData) {
     profissional_preferido_id: (formData.get("profissional_preferido_id") as string) || null,
   });
 
-  if (error) redirect(`/clientes/novo?erro=db&msg=${encodeURIComponent(error.message)}`);
+  if (error) return { error: error.message };
 
   redirect("/clientes?toast=criado");
 }
