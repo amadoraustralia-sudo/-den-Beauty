@@ -1,8 +1,18 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Rotas completamente públicas (sem auth)
-const PUBLIC_ROUTES = ["/login", "/cadastro", "/agendar"];
+// Rotas públicas (sem auth necessário)
+const PUBLIC_ROUTES = [
+  "/login", "/cadastro", "/agendar/login", "/agendar/cadastro",
+  "/agendar/recuperar-senha", "/recuperar-senha", "/redefinir-senha",
+  "/termos", "/privacidade",
+];
+
+// Rotas que são públicas mas com prefixo /agendar (landing, sem subpastas protegidas)
+const PORTAL_PROTECTED = [
+  "/agendar/inicio", "/agendar/novo",
+  "/agendar/meus-agendamentos", "/agendar/perfil",
+];
 
 // Rotas exclusivas do painel admin
 const ADMIN_ROUTES = [
@@ -35,36 +45,36 @@ export async function proxy(request: NextRequest) {
 
   const isPublic = PUBLIC_ROUTES.some((r) => path === r || path.startsWith(r + "/"));
 
-  // Não autenticado tentando acessar rota protegida
-  if (!user && !isPublic) {
+  // 1. Rotas protegidas do portal do cliente — requer login
+  const isPortalProtected = PORTAL_PROTECTED.some((r) => path === r || path.startsWith(r + "/"));
+  if (!user && isPortalProtected) {
+    const url = new URL("/agendar/login", request.url);
+    url.searchParams.set("redirect", path);
+    return NextResponse.redirect(url);
+  }
+
+  // 2. Rotas do admin — requer login
+  const isAdminRoute = ADMIN_ROUTES.some((r) => path === r || path.startsWith(r + "/"));
+  if (!user && isAdminRoute) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Autenticado tentando acessar login/cadastro → redireciona para área correta
-  if (user && (path.startsWith("/login") || path.startsWith("/cadastro"))) {
+  // 3. Usuário logado tenta acessar /login ou /agendar/login → redireciona
+  if (user && (path === "/login" || path === "/agendar/login" || path === "/agendar/cadastro")) {
     const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+      .from("profiles").select("role").eq("id", user.id).single();
 
-    const dest = profile?.role === "cliente" ? "/minha-conta" : "/dashboard";
+    const dest = profile?.role === "admin" ? "/dashboard" : "/agendar/inicio";
     return NextResponse.redirect(new URL(dest, request.url));
   }
 
-  // Cliente tentando acessar painel admin
-  if (user) {
-    const isAdminRoute = ADMIN_ROUTES.some((r) => path.startsWith(r));
-    if (isAdminRoute) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
+  // 4. Cliente tentando acessar painel admin → redireciona para portal
+  if (user && isAdminRoute) {
+    const { data: profile } = await supabase
+      .from("profiles").select("role").eq("id", user.id).single();
 
-      if (profile?.role === "cliente") {
-        return NextResponse.redirect(new URL("/minha-conta", request.url));
-      }
+    if (profile?.role === "cliente") {
+      return NextResponse.redirect(new URL("/agendar/inicio", request.url));
     }
   }
 

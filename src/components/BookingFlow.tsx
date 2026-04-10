@@ -14,6 +14,7 @@ interface Props {
   clienteId: string | null;
   clienteNome: string | null;
   isLogado: boolean;
+  successRedirect?: string;
 }
 
 type Step = "servico" | "profissional" | "data" | "hora" | "confirmar" | "sucesso";
@@ -39,7 +40,7 @@ const STEP_LABELS: Record<Step, string> = {
   hora: "Horário", confirmar: "Confirmar", sucesso: "Confirmado",
 };
 
-export default function BookingFlow({ servicos, profissionais, clienteId, clienteNome, isLogado }: Props) {
+export default function BookingFlow({ servicos, profissionais, clienteId, clienteNome, isLogado, successRedirect }: Props) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("servico");
   const [servico, setServico] = useState<Servico | null>(null);
@@ -103,6 +104,7 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
         hora: slot.hora,
         valor: servico.preco,
         status: "aguardando",
+        origem: "portal_cliente",
       });
 
       if (error) {
@@ -142,7 +144,9 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
           >
             Novo agendamento
           </button>
-          <a href="/minha-conta" className="btn btn-primary">Minha conta</a>
+          <a href={successRedirect ?? "/minha-conta"} className="btn btn-primary">
+            {successRedirect ? "Ver agendamentos" : "Minha conta"}
+          </a>
         </div>
       </div>
     );
