@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSalaoId } from "@/lib/supabase/salon";
 import { redirect } from "next/navigation";
 
 export async function criarProfissional(formData: FormData) {
@@ -12,6 +13,9 @@ export async function criarProfissional(formData: FormData) {
 
   const especialidades = formData.getAll("especialidades") as string[];
 
+  const salao_id = await getSalaoId();
+  if (!salao_id) redirect("/login");
+
   const supabase = await createClient();
   const { error } = await supabase.from("profissionais").insert({
     nome,
@@ -22,6 +26,7 @@ export async function criarProfissional(formData: FormData) {
     periodo_fechamento:  (formData.get("periodo_fechamento") as string) || "mensal",
     especialidades:      especialidades.length > 0 ? especialidades : null,
     ativo:               true,
+    salao_id,
   });
 
   if (error) return { error: `db:${error.message}` };

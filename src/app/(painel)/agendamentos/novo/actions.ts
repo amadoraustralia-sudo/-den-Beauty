@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSalaoId } from "@/lib/supabase/salon";
 import { redirect } from "next/navigation";
 
 export async function criarAgendamento(formData: FormData) {
@@ -20,6 +21,9 @@ export async function criarAgendamento(formData: FormData) {
   const profissional_id = (formData.get("profissional_id") as string) || null;
   const valor           = parseFloat(formData.get("valor") as string) || null;
 
+  const salao_id = await getSalaoId();
+  if (!salao_id) redirect("/login");
+
   const supabase = await createClient();
   const { error } = await supabase.from("agendamentos").insert({
     cliente_id,
@@ -30,6 +34,8 @@ export async function criarAgendamento(formData: FormData) {
     valor,
     status,
     forma_pagamento,
+    salao_id,
+    origem: "admin",
   });
 
   if (error) return { error: `db:${error.message}` };

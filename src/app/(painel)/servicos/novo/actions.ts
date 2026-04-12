@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSalaoId } from "@/lib/supabase/salon";
 import { redirect } from "next/navigation";
 
 export async function criarServico(formData: FormData) {
@@ -15,9 +16,12 @@ export async function criarServico(formData: FormData) {
   if (!duracao_min || duracao_min < 1) return { error: "duracao_min" };
   if (isNaN(preco) || preco < 0)       return { error: "preco" };
 
+  const salao_id = await getSalaoId();
+  if (!salao_id) redirect("/login");
+
   const supabase = await createClient();
   const { error } = await supabase.from("servicos").insert({
-    nome, categoria, duracao_min, preco, descricao, ativo: true,
+    nome, categoria, duracao_min, preco, descricao, ativo: true, salao_id,
   });
 
   if (error) return { error: `db:${error.message}` };

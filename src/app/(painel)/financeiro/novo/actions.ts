@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSalaoId } from "@/lib/supabase/salon";
 import { redirect } from "next/navigation";
 
 export async function criarLancamento(formData: FormData) {
@@ -20,9 +21,12 @@ export async function criarLancamento(formData: FormData) {
     redirect(`/financeiro/novo?erros=${erros.join(",")}`);
   }
 
+  const salao_id = await getSalaoId();
+  if (!salao_id) redirect("/login");
+
   const supabase = await createClient();
   const { error } = await supabase.from("transacoes").insert({
-    tipo, descricao, valor, data, categoria,
+    tipo, descricao, valor, data, categoria, salao_id,
   });
 
   if (error) redirect(`/financeiro/novo?erro=db&msg=${encodeURIComponent(error.message)}`);

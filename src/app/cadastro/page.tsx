@@ -5,9 +5,31 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-export default function CadastroPage() {
+function generateSlug(nome: string, suffix: string): string {
+  return (
+    nome
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .slice(0, 45) +
+    "-" +
+    suffix
+  );
+}
+
+export default function CadastroDonoPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ nome: "", email: "", telefone: "", password: "", confirm: "" });
+  const [form, setForm] = useState({
+    nome: "",
+    nomeSalao: "",
+    email: "",
+    telefone: "",
+    password: "",
+    confirm: "",
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [aceite, setAceite] = useState(false);
@@ -30,26 +52,70 @@ export default function CadastroPage() {
       setError("Você precisa aceitar os termos para continuar.");
       return;
     }
+    if (!form.nomeSalao.trim()) {
+      setError("O nome do estabelecimento é obrigatório.");
+      return;
+    }
 
     setLoading(true);
     setError("");
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+
+    // 1. Cria conta no Auth
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
-        data: { nome: form.nome, telefone: form.telefone, role: "cliente" },
+        data: { nome: form.nome, telefone: form.telefone, role: "admin" },
       },
     });
 
-    if (error) {
-      setError(error.message === "User already registered"
-        ? "Este e-mail já está cadastrado."
-        : "Erro ao criar conta. Tente novamente.");
+    if (signUpError || !authData.user) {
+      setError(
+        signUpError?.message === "User already registered"
+          ? "Este e-mail já está cadastrado."
+          : "Erro ao criar conta. Tente novamente."
+      );
       setLoading(false);
       return;
     }
+
+    const userId = authData.user.id;
+    const slug = generateSlug(form.nomeSalao, Math.random().toString(36).slice(2, 6));
+
+    // 2. Cria o salão (configuracoes) vinculado ao dono
+    const { data: salon, error: salonError } = await supabase
+      .from("configuracoes")
+      .insert({
+        nome_estabelecimento: form.nomeSalao.trim(),
+        telefone: form.telefone.trim() || null,
+        slug,
+        owner_user_id: userId,
+        horario_abertura: "09:00",
+        horario_fechamento: "19:00",
+        dias_funcionamento: ["seg", "ter", "qua", "qui", "sex", "sab"],
+        intervalo_agendamento: 30,
+        antecedencia_minima_horas: 2,
+        cancelamento_horas: 24,
+      })
+      .select("id")
+      .single();
+
+    if (salonError || !salon) {
+      setError("Erro ao criar o estabelecimento. Tente novamente.");
+      setLoading(false);
+      return;
+    }
+
+    // 3. Cria profile como admin vinculado ao salão
+    await supabase.from("profiles").upsert({
+      id: userId,
+      role: "admin",
+      nome: form.nome.trim(),
+      telefone: form.telefone.trim() || null,
+      salao_id: salon.id,
+    });
 
     router.push("/cadastro/confirmacao");
   }
@@ -60,53 +126,59 @@ export default function CadastroPage() {
         {/* Logo */}
         <div className="flex items-center gap-2.5 mb-8">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-800)" }}>
-            <span className="text-xs font-bold" style={{ color: "white" }}>EB</span>
+            <span className="text-xs font-bold" style={{ color: "white" }}>SB</span>
           </div>
-          <span className="font-bold text-sm tracking-wide" style={{ color: "var(--text-primary)" }}>Éden Beauty</span>
+          <span className="font-bold text-sm tracking-wide" style={{ color: "var(--text-primary)" }}>SaaS Salão</span>
         </div>
 
         <div className="mb-7">
-          <h2 style={{ fontSize: "1.375rem" }}>Criar conta</h2>
+          <h2 style={{ fontSize: "1.375rem" }}>Criar conta — Gestor</h2>
           <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
-            Agende serviços e acompanhe seu histórico
+            Cadastre seu estabelecimento e comece a gerenciar
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
-            <label className="label">Nome completo <span style={{ color: "var(--danger)" }}>*</span></label>
-            <input name="nome" required value={form.nome} onChange={handleChange} placeholder="Ana Lima" className="input" />
+            <label className="label">Nome do estabelecimento <span style={{ color: "var(--danger)" }}>*</span></label>
+            <input name="nomeSalao" required value={form.nomeSalao} onChange={handleChange}
+              placeholder="Éden Beauty" className="input" />
+          </div>
+
+          <div>
+            <label className="label">Seu nome completo <span style={{ color: "var(--danger)" }}>*</span></label>
+            <input name="nome" required value={form.nome} onChange={handleChange}
+              placeholder="Ana Lima" className="input" />
           </div>
 
           <div>
             <label className="label">E-mail <span style={{ color: "var(--danger)" }}>*</span></label>
-            <input name="email" type="email" required value={form.email} onChange={handleChange} placeholder="seu@email.com" className="input" />
+            <input name="email" type="email" required value={form.email} onChange={handleChange}
+              placeholder="seu@email.com" className="input" />
           </div>
 
           <div>
             <label className="label">WhatsApp</label>
-            <input name="telefone" value={form.telefone} onChange={handleChange} placeholder="(11) 99999-9999" className="input" />
+            <input name="telefone" value={form.telefone} onChange={handleChange}
+              placeholder="(11) 99999-9999" className="input" />
           </div>
 
           <div>
             <label className="label">Senha <span style={{ color: "var(--danger)" }}>*</span></label>
-            <input name="password" type="password" required value={form.password} onChange={handleChange} placeholder="Mínimo 6 caracteres" className="input" />
+            <input name="password" type="password" required value={form.password} onChange={handleChange}
+              placeholder="Mínimo 6 caracteres" className="input" />
           </div>
 
           <div>
             <label className="label">Confirmar senha <span style={{ color: "var(--danger)" }}>*</span></label>
-            <input name="confirm" type="password" required value={form.confirm} onChange={handleChange} placeholder="Repita a senha" className="input" />
+            <input name="confirm" type="password" required value={form.confirm} onChange={handleChange}
+              placeholder="Repita a senha" className="input" />
           </div>
 
-          {/* LGPD */}
           <label className="flex items-start gap-2.5 cursor-pointer pt-1">
-            <input
-              type="checkbox"
-              checked={aceite}
-              onChange={(e) => setAceite(e.target.checked)}
+            <input type="checkbox" checked={aceite} onChange={(e) => setAceite(e.target.checked)}
               className="mt-0.5 flex-shrink-0"
-              style={{ accentColor: "var(--brand-600)", width: 15, height: 15 }}
-            />
+              style={{ accentColor: "var(--brand-600)", width: 15, height: 15 }} />
             <span className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
               Concordo com os{" "}
               <a href="/termos" target="_blank" style={{ color: "var(--brand-600)" }}>Termos de Uso</a>
@@ -117,13 +189,17 @@ export default function CadastroPage() {
           </label>
 
           {error && (
-            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm" style={{ backgroundColor: "var(--danger-bg)", color: "var(--danger)" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm"
+              style={{ backgroundColor: "var(--danger-bg)", color: "var(--danger)" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
               {error}
             </div>
           )}
 
-          <button type="submit" disabled={loading} className="btn btn-primary w-full" style={{ padding: "0.625rem 1rem" }}>
+          <button type="submit" disabled={loading} className="btn btn-primary w-full"
+            style={{ padding: "0.625rem 1rem" }}>
             {loading ? "Criando conta..." : "Criar conta"}
           </button>
         </form>

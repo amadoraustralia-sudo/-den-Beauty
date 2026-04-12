@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSalon } from "@/lib/supabase/salon";
 import { redirect } from "next/navigation";
 
 export async function salvarConfiguracoes(formData: FormData) {
@@ -20,10 +21,12 @@ export async function salvarConfiguracoes(formData: FormData) {
   if (!nome) redirect("/configuracoes?erro=nome");
 
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  const { data: existing } = await supabase.from("configuracoes").select("id").limit(1).single();
+  const salon = await getSalon();
 
-  if (existing?.id) {
+  if (salon?.id) {
     await supabase.from("configuracoes").update({
       nome_estabelecimento: nome,
       telefone: telefone || null,
@@ -36,8 +39,16 @@ export async function salvarConfiguracoes(formData: FormData) {
       antecedencia_minima_horas: antecedencia,
       cancelamento_horas: cancelamento,
       updated_at: new Date().toISOString(),
-    }).eq("id", existing.id);
+    }).eq("id", salon.id);
   } else {
+    // Primeiro acesso: cria configuracoes vinculada ao dono
+    const slug = nome
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "").trim()
+      .replace(/\s+/g, "-").slice(0, 50)
+      + "-" + Math.random().toString(36).slice(2, 6);
+
     await supabase.from("configuracoes").insert({
       nome_estabelecimento: nome,
       telefone: telefone || null,
@@ -49,6 +60,8 @@ export async function salvarConfiguracoes(formData: FormData) {
       intervalo_agendamento: intervalo,
       antecedencia_minima_horas: antecedencia,
       cancelamento_horas: cancelamento,
+      owner_user_id: user.id,
+      slug,
     });
   }
 

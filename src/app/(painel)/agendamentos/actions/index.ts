@@ -43,6 +43,7 @@ export async function atualizarStatusAgendamento(id: string, status: StatusValid
             percentual,
             valor_comissao: valorComissao,
             data: ag.data ?? new Date().toISOString().split("T")[0],
+            salao_id: (ag as { salao_id?: string }).salao_id ?? null,
           },
           { onConflict: "agendamento_id" }
         );
