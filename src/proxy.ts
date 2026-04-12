@@ -81,6 +81,4 @@ export async function proxy(request: NextRequest) {
   return supabaseResponse;
 }
 
-export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
-};
+// config removido — este arquivo é legado, o middleware ativo é src/middleware.ts
