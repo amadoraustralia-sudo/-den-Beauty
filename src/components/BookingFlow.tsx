@@ -76,6 +76,7 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
       p_data: dataStr,
       p_servico_id: servico.id,
       p_profissional_id: (!qualquerProf && profissional) ? profissional.id : null,
+      p_salao_id: salaoId ?? null,
     });
     setSlots(resultado?.filter((s: Slot) => s.disponivel) ?? []);
     setLoadingSlots(false);
