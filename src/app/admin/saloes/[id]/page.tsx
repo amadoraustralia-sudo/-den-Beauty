@@ -115,10 +115,10 @@ export default async function AdminSalaoDetailPage({
                 style={{ borderBottom: i < agendamentosRecentes.length - 1 ? "1px solid var(--border)" : "none" }}>
                 <div>
                   <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                    {(a.clientes as { nome: string } | null)?.nome ?? "—"}
+                    {(a.clientes as unknown as { nome: string } | null)?.nome ?? "—"}
                   </p>
                   <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    {(a.servicos as { nome: string } | null)?.nome ?? "—"} · {a.data} {a.hora?.slice(0, 5)}
+                    {(a.servicos as unknown as { nome: string } | null)?.nome ?? "—"} · {a.data} {a.hora?.slice(0, 5)}
                   </p>
                 </div>
                 <span className={statusBadge[a.status] ?? "badge badge-gray"}>{a.status}</span>
