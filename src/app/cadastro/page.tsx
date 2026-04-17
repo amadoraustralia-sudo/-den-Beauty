@@ -5,20 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-function generateSlug(nome: string, suffix: string): string {
-  return (
-    nome
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9\s-]/g, "")
-      .trim()
-      .replace(/\s+/g, "-")
-      .slice(0, 45) +
-    "-" +
-    suffix
-  );
-}
 
 export default function CadastroDonoPage() {
   const router = useRouter();
@@ -81,41 +67,11 @@ export default function CadastroDonoPage() {
       return;
     }
 
-    const userId = authData.user.id;
-    const slug = generateSlug(form.nomeSalao, Math.random().toString(36).slice(2, 6));
-
-    // 2. Cria o salão (configuracoes) vinculado ao dono
-    const { data: salon, error: salonError } = await supabase
-      .from("configuracoes")
-      .insert({
-        nome_estabelecimento: form.nomeSalao.trim(),
-        telefone: form.telefone.trim() || null,
-        slug,
-        owner_user_id: userId,
-        horario_abertura: "09:00",
-        horario_fechamento: "19:00",
-        dias_funcionamento: ["seg", "ter", "qua", "qui", "sex", "sab"],
-        intervalo_agendamento: 30,
-        antecedencia_minima_horas: 2,
-        cancelamento_horas: 24,
-      })
-      .select("id")
-      .single();
-
-    if (salonError || !salon) {
-      setError("Erro ao criar o estabelecimento. Tente novamente.");
-      setLoading(false);
-      return;
-    }
-
-    // 3. Cria profile como admin vinculado ao salão
-    await supabase.from("profiles").upsert({
-      id: userId,
-      role: "admin",
-      nome: form.nome.trim(),
-      telefone: form.telefone.trim() || null,
-      salao_id: salon.id,
-    });
+    // Salva dados do salão no localStorage para completar após confirmação de e-mail
+    localStorage.setItem("pending_salon", JSON.stringify({
+      nomeSalao: form.nomeSalao.trim(),
+      telefone: form.telefone.trim() || "",
+    }));
 
     router.push("/cadastro/confirmacao");
   }
