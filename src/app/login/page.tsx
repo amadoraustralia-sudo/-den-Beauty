@@ -133,9 +133,9 @@ export default function LoginPage() {
           <hr className="my-6 divider" />
 
           <p className="text-center text-sm" style={{ color: "var(--text-muted)" }}>
-            É cliente do salão?{" "}
+            Quer cadastrar seu salão?{" "}
             <Link href="/cadastro" style={{ color: "var(--brand-600)", fontWeight: 500 }}>
-              Crie sua conta aqui
+              Criar conta grátis
             </Link>
           </p>
         </div>
