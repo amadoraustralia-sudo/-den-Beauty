@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 export default async function ServicosPage() {
   const supabase = await createClient();
   const salao_id = await getSalaoId();
-  if (!salao_id) redirect("/login");
+  if (!salao_id) redirect("/setup-salao");
 
   const { data: servicos } = await supabase
     .from("servicos")

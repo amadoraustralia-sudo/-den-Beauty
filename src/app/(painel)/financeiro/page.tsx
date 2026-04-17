@@ -29,7 +29,7 @@ export default async function FinanceiroPage({
 
   const supabase = await createClient();
   const salao_id = await getSalaoId();
-  if (!salao_id) redirect("/login");
+  if (!salao_id) redirect("/setup-salao");
 
   const { data: transacoes } = await supabase
     .from("transacoes")

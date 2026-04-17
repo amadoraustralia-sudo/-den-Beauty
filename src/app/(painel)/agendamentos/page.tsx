@@ -22,7 +22,7 @@ export default async function AgendamentosPage({
   const { status: filtroStatus, data: filtroData } = await searchParams;
   const supabase = await createClient();
   const salao_id = await getSalaoId();
-  if (!salao_id) redirect("/login");
+  if (!salao_id) redirect("/setup-salao");
 
   let query = supabase
     .from("agendamentos")

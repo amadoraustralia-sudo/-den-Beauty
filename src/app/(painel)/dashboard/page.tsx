@@ -33,7 +33,7 @@ function getDayRange(offsetWeeks = 0) {
 export default async function DashboardPage() {
   const supabase = await createClient();
   const salao_id = await getSalaoId();
-  if (!salao_id) redirect("/login");
+  if (!salao_id) redirect("/setup-salao");
 
   const hoje = new Date().toISOString().split("T")[0];
   const mesAtual = hoje.slice(0, 7);

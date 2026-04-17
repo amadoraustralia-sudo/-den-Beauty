@@ -11,7 +11,7 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
   const params = await searchParams;
   const supabase = await createClient();
   const salao_id = await getSalaoId();
-  if (!salao_id) redirect("/login");
+  if (!salao_id) redirect("/setup-salao");
 
   const limiteInativo = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
   const filtroInativo = params.inativo === "true";

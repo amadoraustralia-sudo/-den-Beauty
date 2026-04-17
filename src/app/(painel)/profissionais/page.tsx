@@ -11,7 +11,7 @@ function getInitials(name: string) {
 export default async function ProfissionaisPage() {
   const supabase = await createClient();
   const salao_id = await getSalaoId();
-  if (!salao_id) redirect("/login");
+  if (!salao_id) redirect("/setup-salao");
 
   const mesAtual = new Date().toISOString().slice(0, 7);
 
