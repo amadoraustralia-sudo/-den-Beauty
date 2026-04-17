@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import SalaoActions from "./SalaoActions";
 
 export default async function AdminSalaoDetailPage({
   params,
@@ -21,13 +22,11 @@ export default async function AdminSalaoDetailPage({
   const [
     { data: clientes },
     { data: profissionais },
-    { data: servicos },
     { data: agendamentosRecentes },
     { data: transacoes },
   ] = await Promise.all([
     supabase.from("clientes").select("id, nome, email, created_at").eq("salao_id", id).order("created_at", { ascending: false }).limit(5),
     supabase.from("profissionais").select("id, nome, cargo, ativo").eq("salao_id", id).order("nome"),
-    supabase.from("servicos").select("id, nome, categoria, preco, ativo").eq("salao_id", id).order("nome"),
     supabase.from("agendamentos").select("id, data, hora, status, clientes(nome), servicos(nome)").eq("salao_id", id).order("data", { ascending: false }).order("hora", { ascending: false }).limit(5),
     supabase.from("transacoes").select("tipo, valor").eq("salao_id", id).eq("tipo", "entrada"),
   ]);
@@ -49,17 +48,28 @@ export default async function AdminSalaoDetailPage({
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
           Todos os salões
         </Link>
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg"
-            style={{ background: "var(--brand-100)", color: "var(--brand-700)" }}>
-            {salao.nome_estabelecimento?.slice(0, 2).toUpperCase()}
+
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg"
+              style={{ background: "var(--brand-100)", color: "var(--brand-700)" }}>
+              {salao.nome_estabelecimento?.slice(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>{salao.nome_estabelecimento}</h1>
+                <span className={`badge ${salao.ativo ? "badge-green" : "badge-red"}`}>
+                  {salao.ativo ? "Ativo" : "Suspenso"}
+                </span>
+              </div>
+              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                /{salao.slug} · cadastrado em {new Date(salao.created_at).toLocaleDateString("pt-BR")}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>{salao.nome_estabelecimento}</h1>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-              /{salao.slug} · cadastrado em {new Date(salao.created_at).toLocaleDateString("pt-BR")}
-            </p>
-          </div>
+
+          {/* Ações */}
+          <SalaoActions salaoId={id} ativo={salao.ativo} nomeSalao={salao.nome_estabelecimento} />
         </div>
       </div>
 
@@ -68,7 +78,7 @@ export default async function AdminSalaoDetailPage({
         {[
           { label: "Clientes", value: clientes?.length ?? 0 },
           { label: "Profissionais", value: profissionais?.length ?? 0 },
-          { label: "Serviços", value: servicos?.length ?? 0 },
+          { label: "Agendamentos", value: agendamentosRecentes?.length ?? 0 },
           { label: "Receita total", value: `R$ ${receitaTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` },
         ].map((s) => (
           <div key={s.label} className="rounded-xl p-4" style={{ background: "white", border: "1px solid var(--border)" }}>
@@ -139,6 +149,29 @@ export default async function AdminSalaoDetailPage({
                   </div>
                 </div>
                 <span className={`badge ${p.ativo ? "badge-green" : "badge-gray"}`}>{p.ativo ? "Ativo" : "Inativo"}</span>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Clientes recentes */}
+        <div className="rounded-xl overflow-hidden lg:col-span-2" style={{ border: "1px solid var(--border)", background: "white" }}>
+          <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
+            <h2 className="font-semibold" style={{ color: "var(--text-primary)" }}>Clientes recentes</h2>
+          </div>
+          {!clientes?.length ? (
+            <p className="p-5 text-sm" style={{ color: "var(--text-muted)" }}>Nenhum cliente cadastrado.</p>
+          ) : (
+            clientes.map((c, i) => (
+              <div key={c.id} className="flex items-center justify-between px-5 py-3"
+                style={{ borderBottom: i < clientes.length - 1 ? "1px solid var(--border)" : "none" }}>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{c.nome}</p>
+                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>{c.email}</p>
+                </div>
+                <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                  {new Date(c.created_at).toLocaleDateString("pt-BR")}
+                </span>
               </div>
             ))
           )}
