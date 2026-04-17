@@ -31,7 +31,9 @@ export async function signIn(formData: FormData) {
     .eq("id", data.user.id)
     .single();
 
-  if (profile?.role === "cliente") {
+  if (profile?.role === "super_admin") {
+    redirect("/admin");
+  } else if (profile?.role === "cliente") {
     redirect("/minha-conta");
   } else {
     redirect("/dashboard");
