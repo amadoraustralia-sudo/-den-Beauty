@@ -31,10 +31,12 @@ export async function signIn(formData: FormData) {
     .eq("id", data.user.id)
     .single();
 
+  const redirectTo = (formData.get("redirect") as string | null)?.trim();
+
   if (profile?.role === "super_admin") {
     redirect("/admin");
   } else if (profile?.role === "cliente") {
-    redirect("/minha-conta");
+    redirect(redirectTo || "/minha-conta");
   } else {
     redirect("/dashboard");
   }

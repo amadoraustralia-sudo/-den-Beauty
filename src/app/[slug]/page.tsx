@@ -66,7 +66,7 @@ export default async function SalaoLandingPage({
               </Link>
             ) : (
               <>
-                <Link href={`/${slug}/login`} className="text-xs font-medium" style={{ color: "rgb(255 255 255 / 0.65)" }}>
+                <Link href={`/login?redirect=/${slug}/inicio`} className="text-xs font-medium" style={{ color: "rgb(255 255 255 / 0.65)" }}>
                   Entrar
                 </Link>
                 <Link href={`/${slug}/cadastro`} className="px-4 py-2 rounded-lg text-xs font-semibold text-white" style={{ background: "var(--brand-500)" }}>
@@ -209,7 +209,7 @@ export default async function SalaoLandingPage({
               {isLogado ? "Agendar agora" : "Criar conta grátis"}
             </Link>
             {!isLogado && (
-              <Link href={`/${slug}/login`}
+              <Link href={`/login?redirect=/${slug}/inicio`}
                 className="px-8 py-3.5 rounded-xl font-semibold text-sm"
                 style={{ background: "rgb(255 255 255 / 0.12)", color: "white", border: "1px solid rgb(255 255 255 / 0.2)" }}>
                 Já tenho conta

@@ -87,7 +87,7 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
     setErro("");
 
     if (!isLogado) {
-      router.push(`/login?redirect=/agendar`);
+      router.push(`/login`);
       return;
     }
 

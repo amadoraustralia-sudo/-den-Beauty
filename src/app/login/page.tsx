@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "./actions";
 
-export default function LoginPage() {
+function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") ?? "";
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -16,7 +19,6 @@ export default function LoginPage() {
     const formData = new FormData(e.currentTarget);
     const result = await signIn(formData);
 
-    // signIn faz redirect em caso de sucesso — só chega aqui se houver erro
     if (result?.error) {
       setError(result.error);
     }
@@ -24,10 +26,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      className="min-h-screen flex"
-      style={{ backgroundColor: "var(--bg)" }}
-    >
+    <div className="min-h-screen flex" style={{ backgroundColor: "var(--bg)" }}>
       {/* Painel lateral esquerdo */}
       <div
         className="hidden lg:flex lg:w-[420px] flex-col justify-between p-10 flex-shrink-0"
@@ -43,10 +42,10 @@ export default function LoginPage() {
         <div>
           <blockquote className="space-y-3">
             <p className="text-xl font-medium leading-relaxed" style={{ color: "var(--text-inverse)" }}>
-              "Organização que libera tempo para o que realmente importa: o seu cliente."
+              "Beleza e organização que caminham juntas."
             </p>
             <footer className="text-sm" style={{ color: "rgb(255 255 255 / 0.45)" }}>
-              Gestão inteligente para salões e barbearias
+              Plataforma completa para salões e clientes
             </footer>
           </blockquote>
         </div>
@@ -79,11 +78,13 @@ export default function LoginPage() {
           <div className="mb-7">
             <h2 style={{ fontSize: "1.375rem" }}>Entrar na conta</h2>
             <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
-              Acesse o painel do seu estabelecimento
+              Acesse sua área — gestora, cliente ou administrador
             </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
+            <input type="hidden" name="redirect" value={redirectTo} />
+
             <div>
               <label className="label">E-mail</label>
               <input
@@ -141,5 +142,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
