@@ -145,9 +145,19 @@ function LoginForm() {
   );
 }
 
+function LoginFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--bg)" }}>
+      <svg className="animate-spin" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--brand-400)" }}>
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      </svg>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<LoginFallback />}>
       <LoginForm />
     </Suspense>
   );
