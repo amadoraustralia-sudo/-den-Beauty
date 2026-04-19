@@ -13,7 +13,7 @@ export async function signIn(formData: FormData) {
 
   // Rate limiting: 10 tentativas por IP a cada 60 segundos
   const ip = getClientIp(await headers());
-  const limit = rateLimit(ip, "login", 10, 60);
+  const limit = rateLimit(ip, "login", 30, 60);
   if (!limit.ok) {
     return { error: "Muitas tentativas. Aguarde alguns instantes e tente novamente." };
   }

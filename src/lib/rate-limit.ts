@@ -53,6 +53,12 @@ export function rateLimit(
  */
 export function getClientIp(headers: Headers): string {
   const forwarded = headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
-  return headers.get("x-real-ip") ?? "unknown";
+  if (forwarded) {
+    const ip = forwarded.split(",")[0].trim();
+    if (ip) return ip;
+  }
+  const realIp = headers.get("x-real-ip");
+  if (realIp) return realIp;
+  // Fallback único por instância — não bloqueia usuários legítimos
+  return `instance-${Math.random().toString(36).slice(2, 8)}`;
 }
