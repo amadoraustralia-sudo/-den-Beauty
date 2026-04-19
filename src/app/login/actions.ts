@@ -11,7 +11,6 @@ export async function signIn(formData: FormData) {
 
   if (!email || !password) return { error: "Preencha todos os campos." };
 
-  // Rate limiting: 10 tentativas por IP a cada 60 segundos
   const ip = getClientIp(await headers());
   const limit = rateLimit(ip, "login", 30, 60);
   if (!limit.ok) {
@@ -31,14 +30,14 @@ export async function signIn(formData: FormData) {
     .eq("id", data.user.id)
     .single();
 
-  const redirectTo = (formData.get("redirect") as string | null)?.trim();
+  const customRedirect = (formData.get("redirect") as string | null)?.trim();
 
   if (profile?.role === "super_admin") {
-    redirect("/admin");
+    return { redirectTo: "/admin" };
   } else if (profile?.role === "cliente") {
-    redirect(redirectTo || "/minha-conta");
+    return { redirectTo: customRedirect || "/minha-conta" };
   } else {
-    redirect("/dashboard");
+    return { redirectTo: "/dashboard" };
   }
 }
 
@@ -52,7 +51,6 @@ export async function resetPassword(formData: FormData) {
   const email = (formData.get("email") as string)?.trim().toLowerCase();
   if (!email) return { error: "Informe seu e-mail." };
 
-  // Rate limiting: 3 envios por IP a cada 300 segundos (5 min)
   const ip = getClientIp(await headers());
   const limit = rateLimit(ip, "reset-password", 3, 300);
   if (!limit.ok) {
@@ -60,7 +58,6 @@ export async function resetPassword(formData: FormData) {
   }
 
   const supabase = await createClient();
-  // Sempre retorna sucesso para não revelar se o email existe (anti-enumeração)
   await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/redefinir-senha`,
   });
