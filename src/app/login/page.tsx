@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { signIn } from "./actions";
 
-function LoginForm() {
+export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") ?? "";
+  const [redirectTo, setRedirectTo] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setRedirectTo(params.get("redirect") ?? "");
+  }, []);
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -142,23 +145,5 @@ function LoginForm() {
         </div>
       </div>
     </div>
-  );
-}
-
-function LoginFallback() {
-  return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--bg)" }}>
-      <svg className="animate-spin" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--brand-400)" }}>
-        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-      </svg>
-    </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<LoginFallback />}>
-      <LoginForm />
-    </Suspense>
   );
 }
