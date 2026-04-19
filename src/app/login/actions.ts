@@ -1,9 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 
 export async function signIn(formData: FormData) {
   const email    = (formData.get("email") as string)?.trim().toLowerCase();
@@ -17,8 +17,29 @@ export async function signIn(formData: FormData) {
     return { error: "Muitas tentativas. Aguarde alguns instantes e tente novamente." };
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const cookieStore = await cookies();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error || !data.user) {
     return { error: "E-mail ou senha incorretos." };
@@ -37,14 +58,32 @@ export async function signIn(formData: FormData) {
   } else if (profile?.role === "cliente") {
     return { redirectTo: customRedirect || "/minha-conta" };
   } else {
-    return { redirectTo: "/dashboard" };
+    return { redirectTo: customRedirect || "/dashboard" };
   }
 }
 
 export async function signOut() {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
   await supabase.auth.signOut();
-  redirect("/login");
+  return { redirectTo: "/login" };
 }
 
 export async function resetPassword(formData: FormData) {
@@ -57,7 +96,25 @@ export async function resetPassword(formData: FormData) {
     return { error: "Muitas tentativas. Aguarde 5 minutos antes de solicitar novamente." };
   }
 
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
   await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/redefinir-senha`,
   });
