@@ -17,7 +17,7 @@ export default async function ProfissionaisPage() {
 
   const { data: profissionais } = await supabase
     .from("profissionais")
-    .select("*")
+    .select("id, nome, cargo, email, especialidades, percentual_comissao, ativo")
     .eq("salao_id", salao_id)
     .order("nome");
 

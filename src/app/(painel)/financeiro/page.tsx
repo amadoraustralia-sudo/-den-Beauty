@@ -33,7 +33,7 @@ export default async function FinanceiroPage({
 
   const { data: transacoes } = await supabase
     .from("transacoes")
-    .select("*")
+    .select("id, tipo, descricao, valor, data, categoria")
     .eq("salao_id", salao_id)
     .gte("data", inicio)
     .lte("data", fim)

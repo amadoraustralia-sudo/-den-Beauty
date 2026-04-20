@@ -2,10 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getSalaoId } from "@/lib/supabase/salon";
 import Topbar from "@/components/Topbar";
 import Link from "next/link";
-import RevenueChart from "@/components/charts/RevenueChart";
-import PaymentPieChart from "@/components/charts/PaymentPieChart";
-import TopServicosChart from "@/components/charts/TopServicosChart";
+import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
+
+const RevenueChart    = dynamic(() => import("@/components/charts/RevenueChart"),    { ssr: false });
+const PaymentPieChart = dynamic(() => import("@/components/charts/PaymentPieChart"), { ssr: false });
+const TopServicosChart = dynamic(() => import("@/components/charts/TopServicosChart"), { ssr: false });
 
 const statusBadge: Record<string, string> = {
   confirmado: "badge badge-green",

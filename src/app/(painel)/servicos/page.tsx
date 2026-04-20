@@ -11,7 +11,7 @@ export default async function ServicosPage() {
 
   const { data: servicos } = await supabase
     .from("servicos")
-    .select("*")
+    .select("id, nome, categoria, descricao, duracao_min, preco, ativo")
     .eq("salao_id", salao_id)
     .order("categoria")
     .order("nome");

@@ -22,8 +22,14 @@ export default async function ConfiguracoesPage({
   const { erro } = await searchParams;
   const supabase = await createClient();
 
-  const { data: config } = await supabase.from("configuracoes").select("*").limit(1).single();
-  const { data: profissionais } = await supabase.from("profissionais").select("*").order("nome");
+  const [{ data: config }, { data: profissionais }] = await Promise.all([
+    supabase.from("configuracoes")
+      .select("id, nome_estabelecimento, slug, telefone, email, endereco, horario_abertura, horario_fechamento, dias_funcionamento, intervalo_agendamento, antecedencia_minima_horas, cancelamento_horas")
+      .limit(1).single(),
+    supabase.from("profissionais")
+      .select("id, nome, cargo, email, ativo")
+      .order("nome"),
+  ]);
 
   const diasAtivos: string[] = config?.dias_funcionamento ?? ["seg", "ter", "qua", "qui", "sex", "sab"];
 
