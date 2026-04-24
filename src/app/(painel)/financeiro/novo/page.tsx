@@ -11,9 +11,9 @@ function erroStyle(erros: string[], campo: string) {
 export default async function NovoLancamentoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tipo?: string; erros?: string; erro?: string; msg?: string }>;
+  searchParams: Promise<{ tipo?: string; erros?: string; erro?: string; msg?: string; descricao?: string; valor?: string; data?: string }>;
 }) {
-  const { tipo: tipoParam, erros: errosStr, erro, msg } = await searchParams;
+  const { tipo: tipoParam, erros: errosStr, erro, msg, descricao: descParam, valor: valorParam, data: dataParam } = await searchParams;
   const erros = errosStr ? errosStr.split(",") : [];
   const hoje = new Date().toISOString().split("T")[0];
 
@@ -53,19 +53,19 @@ export default async function NovoLancamentoPage({
 
             <div>
               <label className="label">Descrição *</label>
-              <input type="text" name="descricao" className="input" placeholder="Ex: Corte e escova, Conta de energia…" maxLength={120} style={erroStyle(erros, "descricao")} />
+              <input type="text" name="descricao" className="input" placeholder="Ex: Corte e escova, Conta de energia…" maxLength={120} defaultValue={descParam ?? ""} style={erroStyle(erros, "descricao")} />
               {erros.includes("descricao") && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>Campo obrigatório</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label">Valor (R$) *</label>
-                <input type="number" name="valor" className="input" placeholder="0,00" step="0.01" min="0.01" style={erroStyle(erros, "valor")} />
+                <input type="number" name="valor" className="input" placeholder="0,00" step="0.01" min="0.01" defaultValue={valorParam ?? ""} style={erroStyle(erros, "valor")} />
                 {erros.includes("valor") && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>Valor inválido</p>}
               </div>
               <div>
                 <label className="label">Data *</label>
-                <input type="date" name="data" className="input" defaultValue={hoje} style={erroStyle(erros, "data")} />
+                <input type="date" name="data" className="input" defaultValue={dataParam ?? hoje} style={erroStyle(erros, "data")} />
                 {erros.includes("data") && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>Campo obrigatório</p>}
               </div>
             </div>

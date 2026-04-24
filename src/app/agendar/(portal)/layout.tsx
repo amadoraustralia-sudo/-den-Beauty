@@ -8,6 +8,10 @@ export default async function PortalLayout({ children }: { children: React.React
 
   if (!user) redirect("/agendar/login");
 
+  // Gestoras/admins não devem acessar a área de cliente
+  const role = user.user_metadata?.role as string | undefined;
+  if (role === "admin" || role === "super_admin") redirect("/dashboard");
+
   // Busca nome do cliente
   const { data: cliente } = await supabase
     .from("clientes")

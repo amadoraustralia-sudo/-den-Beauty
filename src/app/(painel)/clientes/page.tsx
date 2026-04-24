@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import { getSalaoId } from "@/lib/supabase/salon";
+import { getSalon } from "@/lib/supabase/salon";
 import Topbar from "@/components/Topbar";
 import Link from "next/link";
 import ClientesBusca from "@/components/ClientesBusca";
+import ClienteLinkCard from "@/components/ClienteLinkCard";
 import { redirect } from "next/navigation";
 
 interface SearchParams { inativo?: string; toast?: string }
@@ -10,23 +11,21 @@ interface SearchParams { inativo?: string; toast?: string }
 export default async function ClientesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const supabase = await createClient();
-  const salao_id = await getSalaoId();
-  if (!salao_id) redirect("/setup-salao");
+  const salon = await getSalon();
+  if (!salon) redirect("/setup-salao");
+  const s = salon!;
 
+  const salao_id = s.id;
   const limiteInativo = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
   const filtroInativo = params.inativo === "true";
 
-  let query = supabase
+  let q = supabase
     .from("clientes")
     .select("id, nome, telefone, email, total_visitas, ultima_visita")
     .eq("salao_id", salao_id)
     .order("nome");
-
-  if (filtroInativo) {
-    query = query.or(`ultima_visita.lt.${limiteInativo},ultima_visita.is.null`);
-  }
-
-  const { data: clientes } = await query;
+  if (filtroInativo) q = q.or(`ultima_visita.lt.${limiteInativo},ultima_visita.is.null`);
+  const { data: clientes } = await q;
 
   return (
     <>
@@ -43,7 +42,13 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
         }
       />
 
-      <div className="p-3 lg:p-6">
+      <div className="p-3 lg:p-6 space-y-4">
+        {s.slug && (
+          <ClienteLinkCard
+            nomeEstabelecimento={s.nome_estabelecimento ?? "Salão"}
+            slug={s.slug}
+          />
+        )}
         <div className="card overflow-hidden">
           <ClientesBusca clientes={clientes ?? []} filtroInativo={filtroInativo} />
         </div>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { salvarConfiguracoes } from "./actions";
 import UnsavedChangesGuard from "@/components/UnsavedChangesGuard";
+import CopyLinkButton from "@/components/CopyLinkButton";
 
 const DIAS = [
   { key: "seg", label: "Segunda" },
@@ -176,20 +177,13 @@ export default async function ConfiguracoesPage({
               </div>
 
               {/* Link de agendamento */}
-              {config?.slug && (
-                <div className="card p-5">
-                  <h3 className="mb-2">Link público</h3>
-                  <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-                    Compartilhe este link com seus clientes para agendamento online.
-                  </p>
-                  <div
-                    className="rounded-lg px-3 py-2 text-xs font-mono break-all"
-                    style={{ background: "var(--surface-raised)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
-                  >
-                    /agendar
-                  </div>
-                </div>
-              )}
+              <div className="card p-5">
+                <h3 className="mb-2">Link público</h3>
+                <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
+                  Compartilhe este link com seus clientes para agendamento online.
+                </p>
+                <CopyLinkButton path={config?.slug ? `/${config.slug}` : "/agendar"} />
+              </div>
 
               {/* Salvar */}
               <button type="submit" className="btn btn-primary w-full" style={{ padding: "0.75rem" }}>

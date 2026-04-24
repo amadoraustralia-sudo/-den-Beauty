@@ -18,7 +18,7 @@ export default function AlterarSenhaPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (fields.nova.length < 6) { setError("A senha deve ter no mínimo 6 caracteres."); return; }
+    if (fields.nova.length < 8) { setError("A senha deve ter no mínimo 8 caracteres."); return; }
     if (fields.nova !== fields.confirma) { setError("As senhas não coincidem."); return; }
 
     setSaving(true);
@@ -51,7 +51,7 @@ export default function AlterarSenhaPage() {
             <label className="label">Nova senha <span style={{ color: "var(--danger)" }}>*</span></label>
             <input
               type="password" value={fields.nova} onChange={(e) => set("nova", e.target.value)}
-              placeholder="Mínimo 6 caracteres" className="input" required
+              placeholder="Mínimo 8 caracteres" className="input" required
             />
           </div>
           <div>

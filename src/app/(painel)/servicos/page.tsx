@@ -3,6 +3,7 @@ import { getSalaoId } from "@/lib/supabase/salon";
 import Topbar from "@/components/Topbar";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { toggleServicoAtivo } from "./actions";
 
 export default async function ServicosPage() {
   const supabase = await createClient();
@@ -78,7 +79,16 @@ export default async function ServicosPage() {
                               </span>
                             </td>
                             <td>
-                              <button className="btn btn-ghost" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.625rem" }}>Editar</button>
+                              <div className="flex items-center gap-1">
+                                <Link href={`/servicos/${s.id}/editar`} className="btn btn-ghost" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.625rem" }}>Editar</Link>
+                                <form action={toggleServicoAtivo}>
+                                  <input type="hidden" name="id" value={s.id} />
+                                  <input type="hidden" name="ativo" value={String(!s.ativo)} />
+                                  <button type="submit" className="btn btn-ghost" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.625rem", color: s.ativo ? "var(--danger)" : "var(--success)" }}>
+                                    {s.ativo ? "Desativar" : "Ativar"}
+                                  </button>
+                                </form>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -98,9 +108,7 @@ export default async function ServicosPage() {
                           <span className="text-sm font-semibold" style={{ color: "var(--brand-600)" }}>
                             R$ {Number(s.preco).toFixed(2).replace(".", ",")}
                           </span>
-                          <span className={`badge ${s.ativo ? "badge-green" : "badge-gray"}`}>
-                            {s.ativo ? "Ativo" : "Inativo"}
-                          </span>
+                          <Link href={`/servicos/${s.id}/editar`} className="btn btn-ghost" style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem" }}>Editar</Link>
                         </div>
                       </div>
                     ))}

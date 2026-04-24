@@ -54,6 +54,13 @@ export default function PerfilPortalPage() {
           alergias:         cliente.alergias ?? "",
           preferencias:     cliente.preferencias ?? "",
         });
+      } else {
+        const meta = user.user_metadata ?? {};
+        setFields((f) => ({
+          ...f,
+          nome: meta.nome ?? meta.full_name ?? meta.name ?? "",
+          telefone: meta.telefone ?? meta.phone ?? "",
+        }));
       }
       setLoading(false);
     }

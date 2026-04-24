@@ -23,7 +23,16 @@ export async function criarLancamento(formData: FormData) {
   if (!data || !DATE_REGEX.test(data))                              erros.push("data");
 
   if (erros.length > 0) {
-    redirect(`/financeiro/novo?erros=${erros.join(",")}`);
+    const params = new URLSearchParams();
+    params.set("erros", erros.join(","));
+    if (tipoRaw) params.set("tipo", tipoRaw);
+    const desc = (formData.get("descricao") as string)?.trim();
+    const val  = (formData.get("valor") as string)?.trim();
+    const dat  = (formData.get("data") as string)?.trim();
+    if (desc) params.set("descricao", desc);
+    if (val)  params.set("valor", val);
+    if (dat)  params.set("data", dat);
+    redirect(`/financeiro/novo?${params.toString()}`);
   }
 
   const tipo = tipoRaw as TipoValido;

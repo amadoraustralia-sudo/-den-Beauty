@@ -4,6 +4,7 @@ import Topbar from "@/components/Topbar";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
+import ClienteLinkCard from "@/components/ClienteLinkCard";
 
 const RevenueChart    = dynamic(() => import("@/components/charts/RevenueChart"),    { ssr: false });
 const PaymentPieChart = dynamic(() => import("@/components/charts/PaymentPieChart"), { ssr: false });
@@ -36,6 +37,16 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const salao_id = await getSalaoId();
   if (!salao_id) redirect("/setup-salao");
+
+  const [{ data: { user: authUser } }, { data: configSalao }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from("configuracoes").select("nome_estabelecimento, slug").eq("id", salao_id).single(),
+  ]);
+
+  const nomeGestora = (authUser?.user_metadata?.nome as string | undefined)
+    ?? (authUser?.email?.split("@")[0] ?? "Gestora");
+  const nomeSalao = configSalao?.nome_estabelecimento ?? "Meu Salão";
+  const slugSalao = configSalao?.slug ?? "";
 
   const hoje = new Date().toISOString().split("T")[0];
   const mesAtual = hoje.slice(0, 7);
@@ -185,8 +196,8 @@ export default async function DashboardPage() {
   return (
     <>
       <Topbar
-        title={`Olá, Admin 👋`}
-        subtitle={new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+        title={`Olá, ${nomeGestora.split(" ")[0]} 👋`}
+        subtitle={`${nomeSalao} · ${new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}`}
         actions={
           <Link href="/agendamentos/novo" className="btn btn-primary" style={{ fontSize: "0.8125rem" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -296,15 +307,24 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          {/* Top serviços */}
-          <div className="card p-5">
-            <h3 className="mb-4">Top serviços</h3>
-            {topServicos.length === 0 ? (
-              <div className="empty-state" style={{ padding: "1.5rem" }}>
-                <p className="empty-state-desc">Sem dados esta semana</p>
-              </div>
-            ) : (
-              <TopServicosChart data={topServicos} />
+          {/* Top serviços + Link de Clientes */}
+          <div className="space-y-5">
+            <div className="card p-5">
+              <h3 className="mb-4">Top serviços</h3>
+              {topServicos.length === 0 ? (
+                <div className="empty-state" style={{ padding: "1.5rem" }}>
+                  <p className="empty-state-desc">Sem dados esta semana</p>
+                </div>
+              ) : (
+                <TopServicosChart data={topServicos} />
+              )}
+            </div>
+
+            {slugSalao && (
+              <ClienteLinkCard
+                nomeEstabelecimento={nomeSalao}
+                slug={slugSalao}
+              />
             )}
           </div>
         </div>

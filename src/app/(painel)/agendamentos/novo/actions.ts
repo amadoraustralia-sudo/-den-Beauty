@@ -40,6 +40,7 @@ export async function criarAgendamento(formData: FormData) {
   const forma_pagamento = pagamentoRaw as PagamentoValido | null;
 
   const profissional_id = (formData.get("profissional_id") as string)?.trim() || null;
+  const observacoes = (formData.get("observacoes") as string)?.trim() || null;
   const valorRaw = parseFloat(formData.get("valor") as string);
   const valor = isNaN(valorRaw) || valorRaw < 0 ? null : valorRaw;
 
@@ -56,6 +57,7 @@ export async function criarAgendamento(formData: FormData) {
     valor,
     status,
     forma_pagamento,
+    observacoes,
     salao_id,
     origem: "admin",
   });

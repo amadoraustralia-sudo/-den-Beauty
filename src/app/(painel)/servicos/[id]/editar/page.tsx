@@ -1,19 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import FormCard from "@/components/FormCard";
-import { criarServico } from "./actions";
+import { atualizarServico } from "./actions";
+import { createClient } from "@/lib/supabase/client";
 
 const categorias = ["Cabelo", "Barba", "Unhas", "Estética", "Sobrancelha", "Cílios", "Depilação", "Maquiagem", "Outro"];
-
 const errStyle = { borderColor: "var(--danger)", boxShadow: "0 0 0 2px rgb(239 68 68 / 0.15)" };
 
-export default function NovoServicoPage() {
+export default function EditarServicoPage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
 
+  const [loading, setLoading] = useState(true);
   const [fields, setFields] = useState({
-    nome: "", categoria: "", descricao: "", duracao_min: "", preco: "",
+    nome: "", categoria: "", descricao: "", duracao_min: "", preco: "", ativo: "true",
   });
   const [erros, setErros] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState("");
@@ -24,11 +27,34 @@ export default function NovoServicoPage() {
     if (erros[field]) setErros((e) => { const n = { ...e }; delete n[field]; return n; });
   }
 
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("servicos")
+        .select("nome, categoria, descricao, duracao_min, preco, ativo")
+        .eq("id", id)
+        .single();
+      if (data) {
+        setFields({
+          nome: data.nome ?? "",
+          categoria: data.categoria ?? "",
+          descricao: data.descricao ?? "",
+          duracao_min: String(data.duracao_min ?? ""),
+          preco: String(data.preco ?? ""),
+          ativo: String(data.ativo ?? true),
+        });
+      }
+      setLoading(false);
+    }
+    load();
+  }, [id]);
+
   function validate() {
     const e: Record<string, string> = {};
-    if (!fields.nome.trim())                                          e.nome = "Campo obrigatório";
-    if (!fields.categoria)                                            e.categoria = "Selecione uma categoria";
-    if (!fields.duracao_min || Number(fields.duracao_min) < 1)       e.duracao_min = "Campo obrigatório";
+    if (!fields.nome.trim())                                               e.nome = "Campo obrigatório";
+    if (!fields.categoria)                                                 e.categoria = "Selecione uma categoria";
+    if (!fields.duracao_min || Number(fields.duracao_min) < 1)            e.duracao_min = "Campo obrigatório";
     if (!fields.preco || isNaN(parseFloat(fields.preco.replace(",", ".")))) e.preco = "Campo obrigatório";
     setErros(e);
     return Object.keys(e).length === 0;
@@ -39,18 +65,25 @@ export default function NovoServicoPage() {
     if (!validate()) return;
     setPending(true);
     setServerError("");
-
     const fd = new FormData(ev.currentTarget);
-    const result = await criarServico(fd);
+    fd.set("id", id);
+    const result = await atualizarServico(fd);
     if (result?.error) {
-      const msg = result.error.startsWith("db:") ? result.error.slice(3) : "Erro ao salvar. Tente novamente.";
-      setServerError(msg);
+      setServerError(result.error.startsWith("db:") ? result.error.slice(3) : "Erro ao salvar. Tente novamente.");
       setPending(false);
     }
   }
 
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center">
+        <svg className="animate-spin" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-600)" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+      </div>
+    );
+  }
+
   return (
-    <FormCard title="Novo serviço" subtitle="Adicione um serviço ao catálogo" backHref="/servicos">
+    <FormCard title="Editar serviço" subtitle="Atualize as informações do serviço" backHref="/servicos">
       {serverError && (
         <div className="mb-4 rounded-xl p-3.5" style={{ background: "#fff5f5", border: "1px solid #fecaca" }}>
           <p className="text-sm" style={{ color: "#b91c1c" }}>{serverError}</p>
@@ -58,6 +91,8 @@ export default function NovoServicoPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        <input type="hidden" name="id" value={id} />
+
         <div>
           <h4 className="mb-3" style={{ color: "var(--text-muted)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Informações do serviço
@@ -87,7 +122,7 @@ export default function NovoServicoPage() {
             <div>
               <label className="label">Descrição</label>
               <textarea
-                name="descricao" rows={3} placeholder="Descreva os detalhes do serviço ao cliente..." className="input"
+                name="descricao" rows={3} placeholder="Descreva os detalhes do serviço..." className="input"
                 style={{ resize: "vertical" }}
                 value={fields.descricao} onChange={(e) => set("descricao", e.target.value)}
               />
@@ -110,7 +145,6 @@ export default function NovoServicoPage() {
                 style={erros.duracao_min ? errStyle : {}}
               />
               {erros.duracao_min && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{erros.duracao_min}</p>}
-              <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Usado para bloquear a agenda</p>
             </div>
             <div>
               <label className="label">Preço (R$) <span style={{ color: "var(--danger)" }}>*</span></label>
@@ -126,10 +160,20 @@ export default function NovoServicoPage() {
 
         <hr className="divider" />
 
+        <div>
+          <label className="label">Status</label>
+          <select name="ativo" className="input select" value={fields.ativo} onChange={(e) => set("ativo", e.target.value)}>
+            <option value="true">Ativo</option>
+            <option value="false">Inativo</option>
+          </select>
+        </div>
+
+        <hr className="divider" />
+
         <div className="flex gap-3 justify-end">
           <button type="button" onClick={() => router.push("/servicos")} className="btn btn-secondary">Cancelar</button>
           <button type="submit" className="btn btn-primary" disabled={pending}>
-            {pending ? "Salvando..." : "Salvar serviço"}
+            {pending ? "Salvando..." : "Salvar alterações"}
           </button>
         </div>
       </form>

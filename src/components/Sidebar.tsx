@@ -118,6 +118,32 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [salonName, setSalonName] = useState("Éden Beauty");
+  const [salonInitials, setSalonInitials] = useState("EB");
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from("configuracoes")
+        .select("nome_estabelecimento")
+        .eq("owner_user_id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.nome_estabelecimento) {
+            setSalonName(data.nome_estabelecimento);
+            const initials = data.nome_estabelecimento
+              .split(" ")
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((w: string) => w[0].toUpperCase())
+              .join("");
+            setSalonInitials(initials);
+          }
+        });
+    });
+  }, []);
 
   // Escuta evento do botão hamburguer no Topbar
   useEffect(() => {
@@ -145,10 +171,10 @@ export default function Sidebar() {
       <div className="px-5 py-5 border-b flex items-center justify-between" style={{ borderColor: "rgb(255 255 255 / 0.08)" }}>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-400)" }}>
-            <span className="text-xs font-bold" style={{ color: "white" }}>EB</span>
+            <span className="text-xs font-bold" style={{ color: "white" }}>{salonInitials}</span>
           </div>
           <div>
-            <p className="font-bold text-sm leading-none tracking-wide" style={{ color: "white" }}>Éden Beauty</p>
+            <p className="font-bold text-sm leading-none tracking-wide" style={{ color: "white" }}>{salonName}</p>
             <p className="text-xs mt-0.5" style={{ color: "rgb(255 255 255 / 0.4)" }}>Gestão</p>
           </div>
         </div>

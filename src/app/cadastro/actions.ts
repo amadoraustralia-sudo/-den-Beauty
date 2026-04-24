@@ -50,7 +50,10 @@ export async function completarCadastroSalao(nomeSalao: string, telefone?: strin
     .select("id")
     .single();
 
-  if (error || !salon) return { error: error?.message };
+  if (error || !salon) {
+    console.error("[completarCadastroSalao] insert error:", error);
+    return { error: error?.message ?? "Erro ao criar salão. Tente novamente." };
+  }
 
   // Vincula o salão ao profile
   await supabase

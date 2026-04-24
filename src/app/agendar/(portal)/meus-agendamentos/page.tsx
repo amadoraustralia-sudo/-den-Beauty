@@ -89,6 +89,7 @@ export default async function MeusAgendamentosPage({
 }: {
   searchParams: Promise<{ aba?: string }>;
 }) {
+  try {
   const { aba = "proximos" } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -201,4 +202,7 @@ export default async function MeusAgendamentosPage({
       )}
     </div>
   );
+  } catch {
+    return null;
+  }
 }

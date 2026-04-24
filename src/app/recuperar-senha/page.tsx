@@ -61,7 +61,7 @@ export default function RecuperarSenhaPage() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div>
                 <label className="label">E-mail</label>
                 <input

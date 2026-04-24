@@ -36,6 +36,7 @@ export default function NovoAgendamentoForm({
     valor: "",
     status: "aguardando",
     forma_pagamento: "",
+    observacoes: "",
   });
   const [erros, setErros] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState("");
@@ -218,6 +219,17 @@ export default function NovoAgendamentoForm({
             )}
           </div>
         </div>
+      </div>
+
+      <hr className="divider" />
+
+      <div>
+        <label className="label">Observações</label>
+        <textarea
+          name="observacoes" rows={3} placeholder="Preferências do cliente, alergias, observações..." className="input"
+          style={{ resize: "vertical" }}
+          value={fields.observacoes} onChange={(e) => set("observacoes", e.target.value)}
+        />
       </div>
 
       <hr className="divider" />

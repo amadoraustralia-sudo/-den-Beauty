@@ -15,6 +15,7 @@ interface Props {
   clienteNome: string | null;
   isLogado: boolean;
   salaoId?: string | null;
+  diasFuncionamento?: string[] | null;
   successRedirect?: string;
 }
 
@@ -41,7 +42,9 @@ const STEP_LABELS: Record<Step, string> = {
   hora: "Horário", confirmar: "Confirmar", sucesso: "Confirmado",
 };
 
-export default function BookingFlow({ servicos, profissionais, clienteId, clienteNome, isLogado, salaoId, successRedirect }: Props) {
+const DAY_KEYS = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
+
+export default function BookingFlow({ servicos, profissionais, clienteId, clienteNome, isLogado, salaoId, diasFuncionamento, successRedirect }: Props) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("servico");
   const [servico, setServico] = useState<Servico | null>(null);
@@ -57,12 +60,13 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
   // Categorias dos serviços
   const categorias = [...new Set(servicos.map((s) => s.categoria))];
 
-  // Datas disponíveis (próximos 30 dias, exceto domingo)
+  // Datas disponíveis (próximos 30 dias, filtrado por diasFuncionamento)
   const hoje = new Date();
+  const diasAtivos = diasFuncionamento ?? ["seg", "ter", "qua", "qui", "sex", "sab"];
   const datas: string[] = [];
   for (let i = 1; i <= 30; i++) {
     const d = new Date(hoje); d.setDate(hoje.getDate() + i);
-    if (d.getDay() !== 0) { // sem domingo
+    if (diasAtivos.includes(DAY_KEYS[d.getDay()])) {
       datas.push(d.toISOString().split("T")[0]);
     }
   }

@@ -12,6 +12,18 @@ export default function LoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setRedirectTo(params.get("redirect") ?? "");
+
+    // Se já há sessão ativa, redirecionar conforme role
+    import("@/lib/supabase/client").then(({ createClient }) => {
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) return;
+        const role = user.user_metadata?.role as string | undefined;
+        if (role === "super_admin") window.location.href = "/admin";
+        else if (role === "admin")  window.location.href = params.get("redirect") || "/dashboard";
+        else                        window.location.href = params.get("redirect") || "/agendar/inicio";
+      });
+    });
   }, []);
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
