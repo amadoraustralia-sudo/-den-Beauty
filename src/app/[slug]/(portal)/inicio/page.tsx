@@ -61,7 +61,7 @@ export default async function InicioPage({
       .order("nome").limit(6),
   ]);
 
-  const primeiroNome = (cliente?.nome ?? user.email ?? "").split(" ")[0];
+  const primeiroNome = (cliente?.nome ?? user.email?.split("@")[0] ?? "").split(" ")[0];
   const proximoAg = proximos?.[0] ?? null;
 
   return (

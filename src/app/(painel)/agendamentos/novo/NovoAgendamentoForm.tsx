@@ -4,7 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { criarAgendamento } from "./actions";
 
-const FORMAS_PAGAMENTO = ["Pix", "Cartão de Crédito", "Cartão de Débito", "Dinheiro", "Outro"];
+const FORMAS_PAGAMENTO = [
+  { value: "pix",      label: "Pix" },
+  { value: "credito",  label: "Cartão de Crédito" },
+  { value: "debito",   label: "Cartão de Débito" },
+  { value: "dinheiro", label: "Dinheiro" },
+];
 
 const errStyle = { borderColor: "var(--danger)", boxShadow: "0 0 0 2px rgb(239 68 68 / 0.15)" };
 
@@ -207,7 +212,7 @@ export default function NovoAgendamentoForm({
               style={erros.forma_pagamento ? errStyle : {}}
             >
               <option value="">Não informado</option>
-              {FORMAS_PAGAMENTO.map((f) => <option key={f} value={f}>{f}</option>)}
+              {FORMAS_PAGAMENTO.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
             </select>
             {erros.forma_pagamento && (
               <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{erros.forma_pagamento}</p>
