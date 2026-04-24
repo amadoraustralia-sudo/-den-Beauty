@@ -2,13 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getSalaoId } from "@/lib/supabase/salon";
 import Topbar from "@/components/Topbar";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 import ClienteLinkCard from "@/components/ClienteLinkCard";
-
-const RevenueChart    = dynamic(() => import("@/components/charts/RevenueChart"),    { ssr: false });
-const PaymentPieChart = dynamic(() => import("@/components/charts/PaymentPieChart"), { ssr: false });
-const TopServicosChart = dynamic(() => import("@/components/charts/TopServicosChart"), { ssr: false });
+import { RevenueChartClient, PaymentPieChartClient, TopServicosChartClient } from "@/components/charts/DashboardCharts";
 
 const statusBadge: Record<string, string> = {
   confirmado: "badge badge-green",
@@ -240,13 +236,13 @@ export default async function DashboardPage() {
                 </span>
               )}
             </div>
-            <RevenueChart data={chartData} />
+            <RevenueChartClient data={chartData} />
           </div>
 
           {/* Formas de pagamento */}
           <div className="card p-5">
             <h3 className="mb-4">Formas de pagamento</h3>
-            <PaymentPieChart data={pagamentos} />
+            <PaymentPieChartClient data={pagamentos} />
           </div>
         </div>
 
@@ -316,7 +312,7 @@ export default async function DashboardPage() {
                   <p className="empty-state-desc">Sem dados esta semana</p>
                 </div>
               ) : (
-                <TopServicosChart data={topServicos} />
+                <TopServicosChartClient data={topServicos} />
               )}
             </div>
 
