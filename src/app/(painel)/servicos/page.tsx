@@ -70,8 +70,11 @@ export default async function ServicosPage() {
                               {s.descricao && <p className="text-xs" style={{ color: "var(--text-muted)" }}>{s.descricao}</p>}
                             </td>
                             <td className="text-sm" style={{ color: "var(--text-secondary)" }}>{s.duracao_min} min</td>
-                            <td className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                            <td className="text-sm font-medium" style={{ color: Number(s.preco) === 0 ? "var(--danger)" : "var(--text-primary)" }}>
                               R$ {Number(s.preco).toFixed(2).replace(".", ",")}
+                              {Number(s.preco) === 0 && (
+                                <span className="ml-1.5 text-xs badge badge-red" title="Preço R$0 — não aparece no portal público">Oculto</span>
+                              )}
                             </td>
                             <td>
                               <span className={`badge ${s.ativo ? "badge-green" : "badge-gray"}`}>
