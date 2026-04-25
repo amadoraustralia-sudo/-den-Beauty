@@ -8,6 +8,7 @@ export default function AgendamentosFiltros() {
   const params = useSearchParams();
   const filtroStatus = params.get("status") ?? "";
   const filtroData   = params.get("data") ?? "";
+  const filtroBusca  = params.get("busca") ?? "";
 
   function update(key: string, value: string) {
     const url = new URL(window.location.href);
@@ -16,8 +17,19 @@ export default function AgendamentosFiltros() {
     router.push(url.pathname + url.search);
   }
 
+  const hasFilter = filtroStatus || filtroData || filtroBusca;
+
   return (
     <div className="flex gap-3 px-5 py-3.5 flex-wrap" style={{ borderBottom: "1px solid var(--border)" }}>
+      <input
+        type="search"
+        placeholder="Buscar cliente..."
+        value={filtroBusca}
+        onChange={(e) => update("busca", e.target.value)}
+        className="input"
+        style={{ width: "auto", minWidth: 180 }}
+      />
+
       <select
         value={filtroStatus}
         onChange={(e) => update("status", e.target.value)}
@@ -39,7 +51,7 @@ export default function AgendamentosFiltros() {
         style={{ width: "auto" }}
       />
 
-      {(filtroStatus || filtroData) && (
+      {hasFilter && (
         <Link href="/agendamentos" className="btn btn-secondary" style={{ fontSize: "0.8125rem" }}>
           Limpar filtros
         </Link>

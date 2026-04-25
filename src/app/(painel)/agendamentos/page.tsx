@@ -17,12 +17,23 @@ const statusBadge: Record<string, { cls: string; label: string }> = {
 export default async function AgendamentosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; data?: string }>;
+  searchParams: Promise<{ status?: string; data?: string; busca?: string }>;
 }) {
-  const { status: filtroStatus, data: filtroData } = await searchParams;
+  const { status: filtroStatus, data: filtroData, busca: filtroBusca } = await searchParams;
   const supabase = await createClient();
   const salao_id = await getSalaoId();
   if (!salao_id) redirect("/setup-salao");
+
+  // Resolve client IDs matching the name search first
+  let clienteIds: string[] | null = null;
+  if (filtroBusca?.trim()) {
+    const { data: clientes } = await supabase
+      .from("clientes")
+      .select("id")
+      .eq("salao_id", salao_id)
+      .ilike("nome", `%${filtroBusca.trim()}%`);
+    clienteIds = clientes?.map((c) => c.id) ?? [];
+  }
 
   let query = supabase
     .from("agendamentos")
@@ -31,8 +42,9 @@ export default async function AgendamentosPage({
     .order("data", { ascending: false })
     .order("hora");
 
-  if (filtroStatus) query = query.eq("status", filtroStatus);
-  if (filtroData)   query = query.eq("data", filtroData);
+  if (filtroStatus)                     query = query.eq("status", filtroStatus);
+  if (filtroData)                       query = query.eq("data", filtroData);
+  if (clienteIds !== null)              query = clienteIds.length > 0 ? query.in("cliente_id", clienteIds) : query.eq("cliente_id", "00000000-0000-0000-0000-000000000000");
 
   const { data: agendamentos } = await query;
 
