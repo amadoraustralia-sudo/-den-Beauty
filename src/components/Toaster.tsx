@@ -6,13 +6,15 @@ import { useSearchParams, usePathname, useRouter } from "next/navigation";
 type Toast = { id: number; message: string; type: "success" | "error" | "info" };
 
 const MESSAGES: Record<string, { message: string; type: Toast["type"] }> = {
-  saved:    { message: "Salvo com sucesso!", type: "success" },
-  criado:   { message: "Criado com sucesso!", type: "success" },
-  deleted:  { message: "Removido com sucesso!", type: "success" },
-  cancelado:{ message: "Agendamento cancelado.", type: "info" },
-  status:   { message: "Status atualizado.", type: "success" },
-  senha:    { message: "Senha atualizada com sucesso!", type: "success" },
-  erro:     { message: "Ocorreu um erro. Tente novamente.", type: "error" },
+  saved:      { message: "Salvo com sucesso!", type: "success" },
+  criado:     { message: "Criado com sucesso!", type: "success" },
+  atualizado: { message: "Atualizado com sucesso!", type: "success" },
+  deleted:    { message: "Removido com sucesso!", type: "success" },
+  excluido:   { message: "Lançamento excluído.", type: "success" },
+  cancelado:  { message: "Agendamento cancelado.", type: "info" },
+  status:     { message: "Status atualizado.", type: "success" },
+  senha:      { message: "Senha atualizada com sucesso!", type: "success" },
+  erro:       { message: "Ocorreu um erro. Tente novamente.", type: "error" },
 };
 
 export default function Toaster() {
