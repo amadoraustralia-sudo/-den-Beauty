@@ -120,7 +120,12 @@ export default async function AgendamentosPage({
                             {valor ? `R$ ${Number(valor).toFixed(2).replace(".", ",")}` : "—"}
                           </td>
                           <td><span className={st.cls}>{st.label}</span></td>
-                          <td><AgendamentoStatusMenu id={a.id} status={a.status} /></td>
+                          <td>
+                            <div className="flex items-center gap-1">
+                              <Link href={`/agendamentos/${a.id}/editar`} className="btn btn-ghost" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.5rem" }}>Editar</Link>
+                              <AgendamentoStatusMenu id={a.id} status={a.status} />
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}
