@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { criarCliente } from "./actions";
+import { formatPhone } from "@/lib/format";
 
 interface Profissional { id: string; nome: string }
 
@@ -72,7 +73,7 @@ export default function NovoClienteForm({ profissionais }: { profissionais: Prof
             <label className="label">WhatsApp</label>
             <input
               name="telefone" placeholder="(11) 99999-9999" className="input"
-              value={fields.telefone} onChange={(e) => set("telefone", e.target.value)}
+              value={fields.telefone} onChange={(e) => set("telefone", formatPhone(e.target.value))}
             />
           </div>
           <div>

@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import FormCard from "@/components/FormCard";
 import { atualizarCliente } from "./actions";
 import { createClient } from "@/lib/supabase/client";
+import { formatPhone } from "@/lib/format";
 
 const errStyle = { borderColor: "var(--danger)", boxShadow: "0 0 0 2px rgb(239 68 68 / 0.15)" };
 
@@ -95,7 +96,7 @@ export default function EditarClientePage() {
             </div>
             <div>
               <label className="label">WhatsApp</label>
-              <input name="telefone" placeholder="(11) 99999-9999" className="input" value={fields.telefone} onChange={(e) => set("telefone", e.target.value)} />
+              <input name="telefone" placeholder="(11) 99999-9999" className="input" value={fields.telefone} onChange={(e) => set("telefone", formatPhone(e.target.value))} />
             </div>
             <div>
               <label className="label">E-mail</label>

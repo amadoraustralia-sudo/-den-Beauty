@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import FormCard from "@/components/FormCard";
 import { criarProfissional } from "./actions";
+import { formatPhone } from "@/lib/format";
 
 const especialidades = ["Corte", "Barba", "Coloração", "Escova", "Progressiva", "Hidratação", "Manicure", "Pedicure", "Design de sobrancelha", "Limpeza de pele", "Maquiagem"];
 
@@ -104,7 +105,7 @@ export default function NovoProfissionalPage() {
               <label className="label">Telefone / WhatsApp</label>
               <input
                 name="telefone" type="tel" placeholder="(11) 99999-9999" className="input"
-                value={fields.telefone} onChange={(e) => set("telefone", e.target.value)}
+                value={fields.telefone} onChange={(e) => set("telefone", formatPhone(e.target.value))}
               />
             </div>
           </div>

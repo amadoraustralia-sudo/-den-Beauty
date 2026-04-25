@@ -3,6 +3,7 @@ import { getSalaoId } from "@/lib/supabase/salon";
 import Topbar from "@/components/Topbar";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import DeleteTransacaoButton from "@/components/DeleteTransacaoButton";
 
 function getMesLabel(mes: string) {
   const [ano, m] = mes.split("-");
@@ -161,12 +162,23 @@ export default async function FinanceiroPage({
                       {t.categoria ? ` · ${t.categoria}` : ""}
                     </p>
                   </div>
-                  <span
-                    className="text-sm font-semibold flex-shrink-0"
-                    style={{ color: t.tipo === "entrada" ? "var(--success)" : "var(--danger)" }}
-                  >
-                    {t.tipo === "entrada" ? "+" : "−"}R$ {Number(t.valor).toFixed(2).replace(".", ",")}
-                  </span>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <span
+                      className="text-sm font-semibold"
+                      style={{ color: t.tipo === "entrada" ? "var(--success)" : "var(--danger)" }}
+                    >
+                      {t.tipo === "entrada" ? "+" : "−"}R$ {Number(t.valor).toFixed(2).replace(".", ",")}
+                    </span>
+                    <Link
+                      href={`/financeiro/${t.id}/editar`}
+                      className="btn btn-ghost"
+                      style={{ padding: "0.25rem 0.5rem", color: "var(--text-muted)", fontSize: "0.75rem" }}
+                      title="Editar"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </Link>
+                    <DeleteTransacaoButton id={t.id} />
+                  </div>
                 </div>
               ))}
             </div>

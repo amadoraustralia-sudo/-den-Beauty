@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import FormCard from "@/components/FormCard";
 import { atualizarProfissional } from "./actions";
 import { createClient } from "@/lib/supabase/client";
+import { formatPhone } from "@/lib/format";
 
 const especialidades = ["Corte", "Barba", "Coloração", "Escova", "Progressiva", "Hidratação", "Manicure", "Pedicure", "Design de sobrancelha", "Limpeza de pele", "Maquiagem"];
 const errStyle = { borderColor: "var(--danger)", boxShadow: "0 0 0 2px rgb(239 68 68 / 0.15)" };
@@ -109,7 +110,7 @@ export default function EditarProfissionalPage() {
             </div>
             <div className="sm:col-span-2">
               <label className="label">Telefone / WhatsApp</label>
-              <input name="telefone" type="tel" placeholder="(11) 99999-9999" className="input" value={fields.telefone} onChange={(e) => set("telefone", e.target.value)} />
+              <input name="telefone" type="tel" placeholder="(11) 99999-9999" className="input" value={fields.telefone} onChange={(e) => set("telefone", formatPhone(e.target.value))} />
             </div>
           </div>
         </div>

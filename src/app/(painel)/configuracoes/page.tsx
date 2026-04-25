@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { salvarConfiguracoes } from "./actions";
 import UnsavedChangesGuard from "@/components/UnsavedChangesGuard";
 import CopyLinkButton from "@/components/CopyLinkButton";
+import PhoneInput from "@/components/PhoneInput";
 
 const DIAS = [
   { key: "seg", label: "Segunda" },
@@ -60,7 +61,7 @@ export default async function ConfiguracoesPage({
                   </div>
                   <div>
                     <label className="label">Telefone / WhatsApp</label>
-                    <input name="telefone" className="input" defaultValue={config?.telefone ?? ""} placeholder="(11) 99999-9999" />
+                    <PhoneInput name="telefone" defaultValue={config?.telefone ?? ""} />
                   </div>
                   <div>
                     <label className="label">E-mail de contato</label>
