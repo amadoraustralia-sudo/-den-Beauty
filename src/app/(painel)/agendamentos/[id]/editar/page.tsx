@@ -5,6 +5,8 @@ import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { atualizarAgendamento } from "./actions";
 
+interface Slot { hora: string; profissional_id: string; profissional_nome: string; disponivel: boolean }
+
 const FORMAS_PAGAMENTO = [
   { value: "pix",      label: "Pix" },
   { value: "credito",  label: "Cartão de Crédito" },
@@ -29,6 +31,9 @@ export default function EditarAgendamentoPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [profissionais, setProfissionais] = useState<Profissional[]>([]);
+  const [salaoId, setSalaoId] = useState<string | null>(null);
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [fields, setFields] = useState({
     cliente_id: "", servico_id: "", profissional_id: "",
     data: "", hora: "", valor: "", status: "aguardando",
@@ -51,6 +56,7 @@ export default function EditarAgendamentoPage() {
         supabase.from("profissionais").select("id, nome").eq("ativo", true).order("nome"),
       ]);
       if (ag) {
+        setSalaoId(ag.salao_id ?? null);
         setFields({
           cliente_id: ag.cliente_id ?? "",
           servico_id: ag.servico_id ?? "",
@@ -71,12 +77,50 @@ export default function EditarAgendamentoPage() {
     load();
   }, [id]);
 
+  useEffect(() => {
+    if (!fields.servico_id || !fields.data || !salaoId) { setSlots([]); return; }
+    let cancelled = false;
+    setLoadingSlots(true);
+    setSlots([]);
+    const supabase = createClient();
+    supabase.rpc("get_horarios_disponiveis", {
+      p_data: fields.data,
+      p_servico_id: fields.servico_id,
+      p_profissional_id: fields.profissional_id || null,
+      p_salao_id: salaoId,
+    }).then(({ data }) => {
+      if (!cancelled) { setSlots(data ?? []); setLoadingSlots(false); }
+    });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fields.servico_id, fields.data, fields.profissional_id, salaoId]);
+
+  const slotsUnicos = Array.from(
+    slots.reduce<Map<string, Slot>>((map, s) => {
+      const key = s.hora.slice(0, 5);
+      if (!map.has(key) || (!map.get(key)!.disponivel && s.disponivel)) map.set(key, s);
+      return map;
+    }, new Map()).values()
+  );
+
   function handleServicoChange(servicoId: string) {
-    set("servico_id", servicoId);
-    if (!fields.valor) {
-      const svc = servicos.find((s) => s.id === servicoId);
-      if (svc) setFields((f) => ({ ...f, servico_id: servicoId, valor: String(svc.preco) }));
-    }
+    const svc = servicos.find((s) => s.id === servicoId);
+    setFields((f) => ({ ...f, servico_id: servicoId, hora: "", valor: !f.valor && svc ? String(svc.preco) : f.valor }));
+    if (erros.servico_id) setErros((e) => { const n = { ...e }; delete n.servico_id; return n; });
+  }
+
+  function handleDataChange(data: string) {
+    setFields((f) => ({ ...f, data, hora: "" }));
+    if (erros.data) setErros((e) => { const n = { ...e }; delete n.data; return n; });
+  }
+
+  function handleProfissionalChange(profissionalId: string) {
+    setFields((f) => ({ ...f, profissional_id: profissionalId, hora: "" }));
+  }
+
+  function selecionarSlot(hora: string) {
+    setFields((f) => ({ ...f, hora }));
+    if (erros.hora) setErros((e) => { const n = { ...e }; delete n.hora; return n; });
   }
 
   function validate() {
@@ -152,7 +196,7 @@ export default function EditarAgendamentoPage() {
               </div>
               <div>
                 <label className="label">Profissional</label>
-                <select name="profissional_id" className="input select" value={fields.profissional_id} onChange={(e) => set("profissional_id", e.target.value)}>
+                <select name="profissional_id" className="input select" value={fields.profissional_id} onChange={(e) => handleProfissionalChange(e.target.value)}>
                   <option value="">Sem preferência</option>
                   {profissionais.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
                 </select>
@@ -164,15 +208,48 @@ export default function EditarAgendamentoPage() {
 
           <div>
             <h4 className="mb-3" style={{ color: "var(--text-muted)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Data e horário</h4>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div>
                 <label className="label">Data <span style={{ color: "var(--danger)" }}>*</span></label>
-                <input type="date" name="data" className="input" value={fields.data} onChange={(e) => set("data", e.target.value)} style={erros.data ? errStyle : {}} />
+                <input type="date" name="data" className="input" value={fields.data} onChange={(e) => handleDataChange(e.target.value)} style={erros.data ? errStyle : {}} />
                 {erros.data && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{erros.data}</p>}
               </div>
+              <input type="hidden" name="hora" value={fields.hora} />
               <div>
-                <label className="label">Horário <span style={{ color: "var(--danger)" }}>*</span></label>
-                <input type="time" name="hora" className="input" value={fields.hora} onChange={(e) => set("hora", e.target.value)} style={erros.hora ? errStyle : {}} />
+                <label className="label" style={erros.hora ? { color: "var(--danger)" } : {}}>
+                  Horário <span style={{ color: "var(--danger)" }}>*</span>
+                  {fields.hora && <span className="ml-2 font-semibold" style={{ color: "var(--brand-600)" }}>{fields.hora}</span>}
+                </label>
+                {!salaoId ? (
+                  <input type="time" className="input" value={fields.hora} onChange={(e) => selecionarSlot(e.target.value)} style={erros.hora ? errStyle : {}} />
+                ) : !fields.servico_id || !fields.data ? (
+                  <p className="text-sm py-1" style={{ color: "var(--text-muted)" }}>Selecione um serviço e uma data para ver os horários.</p>
+                ) : loadingSlots ? (
+                  <div className="flex items-center gap-2 py-2" style={{ color: "var(--text-muted)" }}>
+                    <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                    <span className="text-sm">Carregando horários...</span>
+                  </div>
+                ) : slotsUnicos.length === 0 ? (
+                  <p className="text-sm py-1" style={{ color: "var(--text-muted)" }}>Sem horários disponíveis nesta data.</p>
+                ) : (
+                  <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(68px, 1fr))" }}>
+                    {slotsUnicos.map((s) => {
+                      const hora = s.hora.slice(0, 5);
+                      const selecionado = fields.hora === hora;
+                      return (
+                        <button key={hora} type="button" disabled={!s.disponivel} onClick={() => selecionarSlot(hora)} style={{
+                          padding: "0.5rem 0.25rem", borderRadius: "0.5rem", fontSize: "0.8125rem", fontWeight: 500,
+                          border: selecionado ? "2px solid var(--brand-600)" : "1px solid var(--border)",
+                          background: selecionado ? "var(--brand-600)" : s.disponivel ? "white" : "transparent",
+                          color: selecionado ? "white" : s.disponivel ? "var(--text-primary)" : "var(--text-muted)",
+                          cursor: s.disponivel ? "pointer" : "not-allowed", opacity: s.disponivel ? 1 : 0.4, transition: "all 0.15s",
+                        }}>
+                          {hora}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
                 {erros.hora && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{erros.hora}</p>}
               </div>
             </div>

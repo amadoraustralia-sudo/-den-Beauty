@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { criarAgendamento } from "./actions";
 
 const FORMAS_PAGAMENTO = [
@@ -16,6 +17,7 @@ const errStyle = { borderColor: "var(--danger)", boxShadow: "0 0 0 2px rgb(239 6
 interface Cliente { id: string; nome: string }
 interface Servico { id: string; nome: string; preco: number; duracao_min: number }
 interface Profissional { id: string; nome: string }
+interface Slot { hora: string; profissional_id: string; profissional_nome: string; disponivel: boolean }
 
 export default function NovoAgendamentoForm({
   clientes,
@@ -23,12 +25,14 @@ export default function NovoAgendamentoForm({
   profissionais,
   clienteInicial,
   hoje,
+  salaoId,
 }: {
   clientes: Cliente[];
   servicos: Servico[];
   profissionais: Profissional[];
   clienteInicial?: string;
   hoje: string;
+  salaoId?: string | null;
 }) {
   const router = useRouter();
 
@@ -37,7 +41,7 @@ export default function NovoAgendamentoForm({
     servico_id: "",
     profissional_id: "",
     data: hoje,
-    hora: "09:00",
+    hora: "",
     valor: "",
     status: "aguardando",
     forma_pagamento: "",
@@ -46,27 +50,78 @@ export default function NovoAgendamentoForm({
   const [erros, setErros] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState("");
   const [pending, setPending] = useState(false);
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   function set(field: string, value: string) {
     setFields((f) => ({ ...f, [field]: value }));
     if (erros[field]) setErros((e) => { const n = { ...e }; delete n[field]; return n; });
   }
 
-  // Preenche valor automaticamente ao selecionar serviço
   function handleServicoChange(servicoId: string) {
-    set("servico_id", servicoId);
     const svc = servicos.find((s) => s.id === servicoId);
-    if (svc && !fields.valor) {
-      setFields((f) => ({ ...f, servico_id: servicoId, valor: String(svc.preco) }));
-    }
+    setFields((f) => ({
+      ...f,
+      servico_id: servicoId,
+      hora: "",
+      valor: !f.valor && svc ? String(svc.preco) : f.valor,
+    }));
+    if (erros.servico_id) setErros((e) => { const n = { ...e }; delete n.servico_id; return n; });
   }
+
+  function handleDataChange(data: string) {
+    setFields((f) => ({ ...f, data, hora: "" }));
+    if (erros.data) setErros((e) => { const n = { ...e }; delete n.data; return n; });
+  }
+
+  function handleProfissionalChange(profissionalId: string) {
+    setFields((f) => ({ ...f, profissional_id: profissionalId, hora: "" }));
+  }
+
+  function selecionarSlot(hora: string) {
+    setFields((f) => ({ ...f, hora }));
+    if (erros.hora) setErros((e) => { const n = { ...e }; delete n.hora; return n; });
+  }
+
+  useEffect(() => {
+    if (!fields.servico_id || !fields.data || !salaoId) {
+      setSlots([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingSlots(true);
+    setSlots([]);
+    const supabase = createClient();
+    supabase.rpc("get_horarios_disponiveis", {
+      p_data: fields.data,
+      p_servico_id: fields.servico_id,
+      p_profissional_id: fields.profissional_id || null,
+      p_salao_id: salaoId,
+    }).then(({ data }) => {
+      if (!cancelled) {
+        setSlots(data ?? []);
+        setLoadingSlots(false);
+      }
+    });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fields.servico_id, fields.data, fields.profissional_id, salaoId]);
+
+  // Deduplicate by hora, keeping first available
+  const slotsUnicos = Array.from(
+    slots.reduce<Map<string, Slot>>((map, s) => {
+      const key = s.hora.slice(0, 5);
+      if (!map.has(key) || (!map.get(key)!.disponivel && s.disponivel)) map.set(key, s);
+      return map;
+    }, new Map()).values()
+  );
 
   function validate() {
     const e: Record<string, string> = {};
     if (!fields.cliente_id)  e.cliente_id = "Selecione um cliente";
     if (!fields.servico_id)  e.servico_id = "Selecione um serviço";
     if (!fields.data)        e.data = "Campo obrigatório";
-    if (!fields.hora)        e.hora = "Campo obrigatório";
+    if (!fields.hora)        e.hora = "Selecione um horário";
     if (fields.status === "concluido" && !fields.forma_pagamento)
       e.forma_pagamento = "Obrigatório ao concluir";
     setErros(e);
@@ -78,7 +133,6 @@ export default function NovoAgendamentoForm({
     if (!validate()) return;
     setPending(true);
     setServerError("");
-
     const fd = new FormData(ev.currentTarget);
     const result = await criarAgendamento(fd);
     if (result?.error) {
@@ -89,6 +143,7 @@ export default function NovoAgendamentoForm({
   }
 
   const concluido = fields.status === "concluido";
+  const temChaves = !!(fields.servico_id && fields.data);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -138,7 +193,7 @@ export default function NovoAgendamentoForm({
             <label className="label">Profissional</label>
             <select
               name="profissional_id" className="input select"
-              value={fields.profissional_id} onChange={(e) => set("profissional_id", e.target.value)}
+              value={fields.profissional_id} onChange={(e) => handleProfissionalChange(e.target.value)}
             >
               <option value="">Sem preferência</option>
               {profissionais.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
@@ -153,23 +208,79 @@ export default function NovoAgendamentoForm({
         <h4 className="mb-3" style={{ color: "var(--text-muted)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>
           Data e horário
         </h4>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-4">
           <div>
             <label className="label">Data <span style={{ color: "var(--danger)" }}>*</span></label>
             <input
               name="data" type="date" className="input"
-              value={fields.data} onChange={(e) => set("data", e.target.value)}
+              value={fields.data} onChange={(e) => handleDataChange(e.target.value)}
               style={erros.data ? errStyle : {}}
             />
             {erros.data && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{erros.data}</p>}
           </div>
+
+          <input type="hidden" name="hora" value={fields.hora} />
+
           <div>
-            <label className="label">Horário <span style={{ color: "var(--danger)" }}>*</span></label>
-            <input
-              name="hora" type="time" className="input"
-              value={fields.hora} onChange={(e) => set("hora", e.target.value)}
-              style={erros.hora ? errStyle : {}}
-            />
+            <label className="label" style={erros.hora ? { color: "var(--danger)" } : {}}>
+              Horário <span style={{ color: "var(--danger)" }}>*</span>
+              {fields.hora && (
+                <span className="ml-2 font-semibold" style={{ color: "var(--brand-600)" }}>
+                  {fields.hora}
+                </span>
+              )}
+            </label>
+
+            {!salaoId ? (
+              <input
+                type="time" className="input"
+                value={fields.hora} onChange={(e) => selecionarSlot(e.target.value)}
+                style={erros.hora ? errStyle : {}}
+              />
+            ) : !temChaves ? (
+              <p className="text-sm py-1" style={{ color: "var(--text-muted)" }}>
+                Selecione um serviço e uma data para ver os horários.
+              </p>
+            ) : loadingSlots ? (
+              <div className="flex items-center gap-2 py-2" style={{ color: "var(--text-muted)" }}>
+                <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <span className="text-sm">Carregando horários...</span>
+              </div>
+            ) : slotsUnicos.length === 0 ? (
+              <p className="text-sm py-1" style={{ color: "var(--text-muted)" }}>
+                Sem horários disponíveis nesta data.
+              </p>
+            ) : (
+              <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(68px, 1fr))" }}>
+                {slotsUnicos.map((s) => {
+                  const hora = s.hora.slice(0, 5);
+                  const selecionado = fields.hora === hora;
+                  return (
+                    <button
+                      key={hora}
+                      type="button"
+                      disabled={!s.disponivel}
+                      onClick={() => selecionarSlot(hora)}
+                      style={{
+                        padding: "0.5rem 0.25rem",
+                        borderRadius: "0.5rem",
+                        fontSize: "0.8125rem",
+                        fontWeight: 500,
+                        border: selecionado ? "2px solid var(--brand-600)" : "1px solid var(--border)",
+                        background: selecionado ? "var(--brand-600)" : s.disponivel ? "white" : "transparent",
+                        color: selecionado ? "white" : s.disponivel ? "var(--text-primary)" : "var(--text-muted)",
+                        cursor: s.disponivel ? "pointer" : "not-allowed",
+                        opacity: s.disponivel ? 1 : 0.4,
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      {hora}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {erros.hora && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{erros.hora}</p>}
           </div>
         </div>
