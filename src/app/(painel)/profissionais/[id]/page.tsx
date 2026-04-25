@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Topbar from "@/components/Topbar";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import BloqueiosTab from "./BloqueiosTab";
 
 const statusBadge: Record<string, { cls: string; label: string }> = {
   confirmado: { cls: "badge badge-green",  label: "Confirmado" },
@@ -65,9 +66,20 @@ export default async function ProfissionalDetailPage({
     return d.toISOString().slice(0, 7);
   });
 
+  const { data: salaoConfig } = await supabase.from("profiles").select("salao_id").eq("id", (await supabase.auth.getUser()).data.user?.id ?? "").single();
+  const salaoId = salaoConfig?.salao_id ?? null;
+
+  const { data: bloqueios } = await supabase
+    .from("horarios_bloqueados")
+    .select("id, data, hora_inicio, hora_fim, motivo")
+    .eq("profissional_id", id)
+    .gte("data", new Date().toISOString().split("T")[0])
+    .order("data").order("hora_inicio");
+
   const tabs = [
-    { key: "historico", label: "Histórico" },
-    { key: "comissoes", label: "Comissões do mês" },
+    { key: "historico",  label: "Histórico" },
+    { key: "comissoes",  label: "Comissões do mês" },
+    { key: "bloqueios",  label: "Horários bloqueados" },
   ];
 
   return (
@@ -206,6 +218,11 @@ export default async function ProfissionalDetailPage({
                 </div>
               )}
             </>
+          )}
+
+          {/* Aba: Horários Bloqueados */}
+          {aba === "bloqueios" && salaoId && (
+            <BloqueiosTab profissionalId={id} salaoId={salaoId} bloqueiosIniciais={bloqueios ?? []} />
           )}
 
           {/* Aba: Comissões do mês */}

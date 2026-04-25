@@ -15,8 +15,24 @@ export async function salvarConfiguracoes(formData: FormData) {
   const antecedencia       = parseInt(formData.get("antecedencia_minima_horas") as string) || 2;
   const cancelamento       = parseInt(formData.get("cancelamento_horas") as string) || 24;
 
-  const diasCheck = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"];
-  const dias_funcionamento = diasCheck.filter((d) => formData.get(`dia_${d}`) === "on");
+  const diasKeys = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"];
+
+  const horarios_semana: Record<string, object> = {};
+  for (const d of diasKeys) {
+    const ativo = formData.get(`horario_${d}_ativo`) === "on";
+    const abre  = (formData.get(`horario_${d}_abre`)  as string) || null;
+    const fecha = (formData.get(`horario_${d}_fecha`) as string) || null;
+    const int_inicio = (formData.get(`horario_${d}_int_inicio`) as string) || null;
+    const int_fim    = (formData.get(`horario_${d}_int_fim`)    as string) || null;
+    horarios_semana[d] = {
+      ativo,
+      ...(abre  ? { abre }  : {}),
+      ...(fecha ? { fecha } : {}),
+      ...(int_inicio && int_fim ? { intervalo_inicio: int_inicio, intervalo_fim: int_fim } : {}),
+    };
+  }
+
+  const dias_funcionamento = diasKeys.filter((d) => (horarios_semana[d] as { ativo: boolean }).ativo);
 
   if (!nome) redirect("/configuracoes?erro=nome");
 
@@ -35,6 +51,7 @@ export async function salvarConfiguracoes(formData: FormData) {
       horario_abertura,
       horario_fechamento,
       dias_funcionamento,
+      horarios_semana,
       intervalo_agendamento: intervalo,
       antecedencia_minima_horas: antecedencia,
       cancelamento_horas: cancelamento,

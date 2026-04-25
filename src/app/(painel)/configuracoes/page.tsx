@@ -34,6 +34,16 @@ export default async function ConfiguracoesPage({
   ]);
 
   const diasAtivos: string[] = config?.dias_funcionamento ?? ["seg", "ter", "qua", "qui", "sex", "sab"];
+  const horariosSemana: Record<string, { ativo: boolean; abre: string; fecha: string; intervalo_inicio?: string; intervalo_fim?: string }> =
+    (config as any)?.horarios_semana ?? {};
+
+  const getHorarioDia = (key: string) => ({
+    ativo: horariosSemana[key]?.ativo ?? diasAtivos.includes(key),
+    abre: horariosSemana[key]?.abre ?? config?.horario_abertura?.slice(0, 5) ?? "09:00",
+    fecha: horariosSemana[key]?.fecha ?? config?.horario_fechamento?.slice(0, 5) ?? "19:00",
+    intervalo_inicio: horariosSemana[key]?.intervalo_inicio ?? "",
+    intervalo_fim: horariosSemana[key]?.intervalo_fim ?? "",
+  });
 
   return (
     <>
@@ -148,32 +158,53 @@ export default async function ConfiguracoesPage({
 
             {/* Coluna lateral */}
             <div className="space-y-5">
-              {/* Horário */}
-              <div className="card p-5">
-                <h3 className="mb-4">Horário de funcionamento</h3>
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div>
-                    <label className="label">Abre às</label>
-                    <input type="time" name="horario_abertura" className="input" defaultValue={config?.horario_abertura?.slice(0, 5) ?? "09:00"} />
-                  </div>
-                  <div>
-                    <label className="label">Fecha às</label>
-                    <input type="time" name="horario_fechamento" className="input" defaultValue={config?.horario_fechamento?.slice(0, 5) ?? "19:00"} />
-                  </div>
+              {/* Horário por dia */}
+              <div className="card overflow-hidden">
+                <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
+                  <h3>Horário de funcionamento</h3>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>Configure por dia da semana</p>
                 </div>
-                <p className="text-xs font-medium mb-2" style={{ color: "var(--text-muted)" }}>Dias de funcionamento</p>
-                <div className="space-y-2">
-                  {DIAS.map((d) => (
-                    <label key={d.key} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name={`dia_${d.key}`}
-                        defaultChecked={diasAtivos.includes(d.key)}
-                        style={{ accentColor: "var(--brand-600)", width: 15, height: 15, flexShrink: 0 }}
-                      />
-                      <span className="text-sm" style={{ color: "var(--text-secondary)" }}>{d.label}</span>
-                    </label>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                        {["Dia","Ativo","Abre","Fecha","Intervalo"].map(h => (
+                          <th key={h} className="text-xs" style={{ padding: "0.5rem 0.75rem", color: "var(--text-muted)", fontWeight: 500, textAlign: "left", whiteSpace: "nowrap" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {DIAS.map((d, i) => {
+                        const h = getHorarioDia(d.key);
+                        return (
+                          <tr key={d.key} style={{ borderBottom: i < DIAS.length - 1 ? "1px solid var(--border)" : "none" }}>
+                            <td className="text-sm" style={{ padding: "0.5rem 0.75rem", color: "var(--text-secondary)", fontWeight: 500, whiteSpace: "nowrap" }}>{d.label}</td>
+                            <td style={{ padding: "0.5rem 0.75rem" }}>
+                              <input type="checkbox" name={`horario_${d.key}_ativo`} defaultChecked={h.ativo}
+                                style={{ accentColor: "var(--brand-600)", width: 15, height: 15 }} />
+                            </td>
+                            <td style={{ padding: "0.375rem 0.5rem" }}>
+                              <input type="time" name={`horario_${d.key}_abre`} defaultValue={h.abre}
+                                className="input" style={{ padding: "0.25rem 0.375rem", fontSize: "0.8125rem", width: 90 }} />
+                            </td>
+                            <td style={{ padding: "0.375rem 0.5rem" }}>
+                              <input type="time" name={`horario_${d.key}_fecha`} defaultValue={h.fecha}
+                                className="input" style={{ padding: "0.25rem 0.375rem", fontSize: "0.8125rem", width: 90 }} />
+                            </td>
+                            <td style={{ padding: "0.375rem 0.5rem" }}>
+                              <div className="flex items-center gap-1">
+                                <input type="time" name={`horario_${d.key}_int_inicio`} defaultValue={h.intervalo_inicio}
+                                  className="input" style={{ padding: "0.25rem 0.375rem", fontSize: "0.8125rem", width: 82 }} placeholder="—" />
+                                <span className="text-xs" style={{ color: "var(--text-muted)" }}>-</span>
+                                <input type="time" name={`horario_${d.key}_int_fim`} defaultValue={h.intervalo_fim}
+                                  className="input" style={{ padding: "0.25rem 0.375rem", fontSize: "0.8125rem", width: 82 }} placeholder="—" />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 

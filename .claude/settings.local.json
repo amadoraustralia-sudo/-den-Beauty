@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(npx dotenv:*)",
+      "Bash(NEXT_PUBLIC_SUPABASE_URL=https://yzqewgzgykclhyorjewz.supabase.co SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6cWV3Z3pneWtjbGh5b3JqZXd6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTQyNTI4MywiZXhwIjoyMDkxMDAxMjgzfQ.kgsr_BDV1RaKh-bZMtstQpdenHlycZEKQdq-JJjf6_Q npx ts-node --skipProject scripts/create-studio-reis.ts)",
+      "Bash(curl:*)",
+      "Bash(NEXT_PUBLIC_SUPABASE_URL=https://yzqewgzgykclhyorjewz.supabase.co SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6cWV3Z3pneWtjbGh5b3JqZXd6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTQyNTI4MywiZXhwIjoyMDkxMDAxMjgzfQ.kgsr_BDV1RaKh-bZMtstQpdenHlycZEKQdq-JJjf6_Q npx ts-node --skipProject -e \":*)",
+      "Bash(NEXT_PUBLIC_SUPABASE_URL=https://yzqewgzgykclhyorjewz.supabase.co SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6cWV3Z3pneWtjbGh5b3JqZXd6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTQyNTI4MywiZXhwIjoyMDkxMDAxMjgzfQ.kgsr_BDV1RaKh-bZMtstQpdenHlycZEKQdq-JJjf6_Q npx ts-node --skipProject scripts/update-senha.ts)",
+      "Bash(ls src/app/\\\\\\(painel\\\\\\)/agendamentos/novo/)",
+      "Bash(ls src/app/\\\\\\(painel\\\\\\)/clientes/)",
+      "Bash(ls src/app/\\\\\\(painel\\\\\\)/profissionais/)",
+      "Bash(NEXT_PUBLIC_SUPABASE_URL=https://yzqewgzgykclhyorjewz.supabase.co SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6cWV3Z3pneWtjbGh5b3JqZXd6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTQyNTI4MywiZXhwIjoyMDkxMDAxMjgzfQ.kgsr_BDV1RaKh-bZMtstQpdenHlycZEKQdq-JJjf6_Q npx ts-node --skipProject scripts/create-rpc-slots.ts)",
+      "Bash(head -5 src/app/\\\\\\(painel\\\\\\)/configuracoes/page.tsx)",
+      "Bash(head -5 src/app/\\\\\\(painel\\\\\\)/clientes/novo/NovoClienteForm.tsx)",
+      "Bash(find \"src/app/\\(painel\\)/agendamentos\" -type f)",
+      "Bash(find \"src/app/\\(painel\\)/profissionais\" -type f)",
+      "Bash(cat \"src/app/\\(painel\\)/agendamentos/novo/actions.ts\")",
+      "mcp__claude_ai_Supabase__list_tables",
+      "Bash(node scripts/fix-studio-reis.mjs)",
+      "Bash(node -e ' *)",
+      "Bash(npx supabase *)"
+    ]
+  }
+}
