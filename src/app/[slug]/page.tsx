@@ -37,7 +37,7 @@ export default async function SalaoLandingPage({
     { data: { user } },
   ] = await Promise.all([
     supabase.from("servicos").select("id, nome, categoria, descricao, duracao_min, preco")
-      .eq("salao_id", salao_id).eq("ativo", true).order("categoria").order("nome"),
+      .eq("salao_id", salao_id).eq("ativo", true).gt("preco", 0).order("categoria").order("nome"),
     supabase.from("profissionais").select("id, nome, cargo, especialidades")
       .eq("salao_id", salao_id).eq("ativo", true).order("nome"),
     supabase.auth.getUser(),
