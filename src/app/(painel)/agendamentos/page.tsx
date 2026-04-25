@@ -167,7 +167,8 @@ export default async function AgendamentosPage({
                           )}
                         </div>
                       </div>
-                      <div className="flex-shrink-0">
+                      <div className="flex-shrink-0 flex items-center gap-1">
+                        <Link href={`/agendamentos/${a.id}/editar`} className="btn btn-ghost" style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem" }}>Editar</Link>
                         <AgendamentoStatusMenu id={a.id} status={a.status} />
                       </div>
                     </div>
