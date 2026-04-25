@@ -36,6 +36,7 @@ export default async function InicioPage({
   }
 
   const hoje = new Date().toISOString().split("T")[0];
+  const salaoId = cliente?.salao_id ?? null;
 
   const [{ data: proximos }, { data: servicos }] = await Promise.all([
     supabase
@@ -46,12 +47,13 @@ export default async function InicioPage({
       .not("status", "eq", "cancelado")
       .order("data").order("hora")
       .limit(1),
-    supabase
-      .from("servicos")
-      .select("id, nome, categoria, duracao_min, preco")
-      .eq("ativo", true)
-      .order("nome")
-      .limit(6),
+    salaoId
+      ? supabase
+          .from("servicos")
+          .select("id, nome, categoria, duracao_min, preco")
+          .eq("salao_id", salaoId).eq("ativo", true).gt("preco", 0)
+          .order("nome").limit(6)
+      : Promise.resolve({ data: [] }),
   ]);
 
   const primeiroNome = (cliente?.nome ?? user.user_metadata?.nome ?? user.user_metadata?.full_name ?? user.email ?? "").split(" ")[0];

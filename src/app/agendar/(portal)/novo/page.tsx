@@ -23,8 +23,12 @@ export default async function NovoAgendamentoPortalPage() {
     { data: profissionais },
     { data: config },
   ] = await Promise.all([
-    supabase.from("servicos").select("id, nome, categoria, duracao_min, preco").eq("ativo", true).order("categoria").order("nome"),
-    supabase.from("profissionais").select("id, nome, especialidades").eq("ativo", true).order("nome"),
+    salaoId
+      ? supabase.from("servicos").select("id, nome, categoria, duracao_min, preco").eq("salao_id", salaoId).eq("ativo", true).gt("preco", 0).order("categoria").order("nome")
+      : Promise.resolve({ data: [] }),
+    salaoId
+      ? supabase.from("profissionais").select("id, nome, especialidades").eq("salao_id", salaoId).eq("ativo", true).order("nome")
+      : Promise.resolve({ data: [] }),
     salaoId
       ? supabase.from("configuracoes").select("dias_funcionamento").eq("salao_id", salaoId).limit(1).single()
       : Promise.resolve({ data: null }),

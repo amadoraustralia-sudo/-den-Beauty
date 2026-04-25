@@ -20,7 +20,7 @@ export default async function NovoAgendamentoPage({
   const [{ data: servicos }, { data: profissionais }] = await Promise.all([
     supabase.from("servicos")
       .select("id, nome, categoria, duracao_min, preco")
-      .eq("salao_id", config.id).eq("ativo", true)
+      .eq("salao_id", config.id).eq("ativo", true).gt("preco", 0)
       .order("categoria").order("nome"),
     supabase.from("profissionais")
       .select("id, nome, especialidades")

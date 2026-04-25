@@ -57,7 +57,7 @@ export default async function InicioPage({
     supabase
       .from("servicos")
       .select("id, nome, categoria, duracao_min, preco")
-      .eq("salao_id", config.id).eq("ativo", true)
+      .eq("salao_id", config.id).eq("ativo", true).gt("preco", 0)
       .order("nome").limit(6),
   ]);
 
