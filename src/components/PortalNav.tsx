@@ -49,9 +49,13 @@ function buildNav(slug: string) {
 export default function PortalNav({
   nomeCliente,
   slug = "agendar",
+  salonName,
+  salonLogoUrl,
 }: {
   nomeCliente?: string;
   slug?: string;
+  salonName?: string;
+  salonLogoUrl?: string;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -79,10 +83,14 @@ export default function PortalNav({
       >
         {/* Logo */}
         <div className="px-5 py-5 flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--brand-400)" }}>
-            <span className="text-xs font-bold text-white">SB</span>
-          </div>
-          <span className="text-sm font-bold tracking-wide text-white">Minha Conta</span>
+          {salonLogoUrl ? (
+            <img src={salonLogoUrl} alt={salonName ?? "Logo"} style={{ height: 28, maxWidth: 72, objectFit: "contain", borderRadius: 4, flexShrink: 0 }} />
+          ) : (
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--brand-400)" }}>
+              <span className="text-xs font-bold text-white">{salonName ? salonName.slice(0, 2).toUpperCase() : "SB"}</span>
+            </div>
+          )}
+          <span className="text-sm font-bold tracking-wide text-white">{salonName ?? "Minha Conta"}</span>
         </div>
 
         {/* Saudação */}
@@ -141,10 +149,14 @@ export default function PortalNav({
         style={{ backgroundColor: "var(--brand-800)", position: "sticky", top: 0, zIndex: 40 }}
       >
         <Link href={`/${slug}/inicio`} className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--brand-400)" }}>
-            <span className="text-xs font-bold text-white">SB</span>
-          </div>
-          <span className="text-sm font-bold text-white">Minha Conta</span>
+          {salonLogoUrl ? (
+            <img src={salonLogoUrl} alt={salonName ?? "Logo"} style={{ height: 26, maxWidth: 64, objectFit: "contain", borderRadius: 4 }} />
+          ) : (
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--brand-400)" }}>
+              <span className="text-xs font-bold text-white">{salonName ? salonName.slice(0, 2).toUpperCase() : "SB"}</span>
+            </div>
+          )}
+          <span className="text-sm font-bold text-white">{salonName ?? "Minha Conta"}</span>
         </Link>
         <button onClick={handleLogout} className="text-xs px-3 py-1.5 rounded-lg" style={{ color: "rgb(255 255 255 / 0.55)", background: "rgb(255 255 255 / 0.08)" }}>
           Sair

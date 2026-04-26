@@ -120,6 +120,7 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [salonName, setSalonName] = useState("Éden Beauty");
   const [salonInitials, setSalonInitials] = useState("EB");
+  const [salonLogoUrl, setSalonLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -127,7 +128,7 @@ export default function Sidebar() {
       if (!user) return;
       supabase
         .from("configuracoes")
-        .select("nome_estabelecimento")
+        .select("nome_estabelecimento, logo_url")
         .eq("owner_user_id", user.id)
         .single()
         .then(({ data }) => {
@@ -140,6 +141,9 @@ export default function Sidebar() {
               .map((w: string) => w[0].toUpperCase())
               .join("");
             setSalonInitials(initials);
+          }
+          if ((data as any)?.logo_url) {
+            setSalonLogoUrl((data as any).logo_url);
           }
         });
     });
@@ -170,9 +174,13 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-5 py-5 border-b flex items-center justify-between" style={{ borderColor: "rgb(255 255 255 / 0.08)" }}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-400)" }}>
-            <span className="text-xs font-bold" style={{ color: "white" }}>{salonInitials}</span>
-          </div>
+          {salonLogoUrl ? (
+            <img src={salonLogoUrl} alt={salonName} style={{ height: 32, maxWidth: 80, objectFit: "contain", borderRadius: 6, flexShrink: 0 }} />
+          ) : (
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-400)" }}>
+              <span className="text-xs font-bold" style={{ color: "white" }}>{salonInitials}</span>
+            </div>
+          )}
           <div>
             <p className="font-bold text-sm leading-none tracking-wide" style={{ color: "white" }}>{salonName}</p>
             <p className="text-xs mt-0.5" style={{ color: "rgb(255 255 255 / 0.4)" }}>Gestão</p>

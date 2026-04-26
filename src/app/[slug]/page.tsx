@@ -52,11 +52,15 @@ export default async function SalaoLandingPage({
       <header style={{ backgroundColor: "var(--brand-800)", position: "sticky", top: 0, zIndex: 50 }}>
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--brand-400)" }}>
-              <span className="text-xs font-bold text-white">
-                {nomeEstabelecimento.slice(0, 2).toUpperCase()}
-              </span>
-            </div>
+            {config.logo_url ? (
+              <img src={config.logo_url} alt={nomeEstabelecimento} style={{ height: 32, maxWidth: 80, objectFit: "contain", borderRadius: 6 }} />
+            ) : (
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--brand-400)" }}>
+                <span className="text-xs font-bold text-white">
+                  {nomeEstabelecimento.slice(0, 2).toUpperCase()}
+                </span>
+              </div>
+            )}
             <span className="font-bold text-sm tracking-wide text-white">{nomeEstabelecimento}</span>
           </div>
           <div className="flex items-center gap-2">

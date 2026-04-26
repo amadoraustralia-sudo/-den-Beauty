@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -15,6 +15,17 @@ export default function CadastroPortalPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [erros, setErros] = useState<Record<string, string>>({});
+  const [salonLogoUrl, setSalonLogoUrl] = useState<string | null>(null);
+  const [salonName, setSalonName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.from("configuracoes").select("nome_estabelecimento, logo_url").eq("slug", slug).single()
+      .then(({ data }) => {
+        if (data?.nome_estabelecimento) setSalonName(data.nome_estabelecimento);
+        if ((data as any)?.logo_url) setSalonLogoUrl((data as any).logo_url);
+      });
+  }, [slug]);
 
   function set(field: string, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -44,7 +55,7 @@ export default function CadastroPortalPage() {
     // Busca o salao_id pelo slug
     const { data: config } = await supabase
       .from("configuracoes")
-      .select("id")
+      .select("id, nome_estabelecimento, logo_url")
       .eq("slug", slug)
       .single();
 
@@ -108,10 +119,14 @@ export default function CadastroPortalPage() {
     <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: "#F5F0E8" }}>
       <div className="w-full max-w-sm">
         <Link href={`/${slug}`} className="flex items-center gap-2.5 mb-8 justify-center">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: "var(--brand-800)" }}>
-            <span className="text-sm font-bold text-white">SB</span>
-          </div>
-          <span className="font-bold tracking-wide" style={{ color: "var(--brand-800)", fontSize: "1rem" }}>Criar conta</span>
+          {salonLogoUrl ? (
+            <img src={salonLogoUrl} alt={salonName ?? "Logo"} style={{ height: 36, maxWidth: 100, objectFit: "contain" }} />
+          ) : (
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: "var(--brand-800)" }}>
+              <span className="text-sm font-bold text-white">{salonName ? salonName.slice(0, 2).toUpperCase() : "SB"}</span>
+            </div>
+          )}
+          <span className="font-bold tracking-wide" style={{ color: "var(--brand-800)", fontSize: "1rem" }}>{salonName ?? "Criar conta"}</span>
         </Link>
 
         <div className="rounded-2xl p-6 shadow-sm" style={{ background: "white", border: "1px solid var(--border)" }}>

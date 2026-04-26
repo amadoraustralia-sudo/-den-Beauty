@@ -5,6 +5,7 @@ import { salvarConfiguracoes } from "./actions";
 import UnsavedChangesGuard from "@/components/UnsavedChangesGuard";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import PhoneInput from "@/components/PhoneInput";
+import LogoUpload from "@/components/LogoUpload";
 
 const DIAS = [
   { key: "seg", label: "Segunda" },
@@ -26,7 +27,7 @@ export default async function ConfiguracoesPage({
 
   const [{ data: config }, { data: profissionais }] = await Promise.all([
     supabase.from("configuracoes")
-      .select("id, nome_estabelecimento, slug, telefone, email, endereco, horario_abertura, horario_fechamento, dias_funcionamento, horarios_semana, intervalo_agendamento, antecedencia_minima_horas, cancelamento_horas")
+      .select("id, nome_estabelecimento, slug, telefone, email, endereco, horario_abertura, horario_fechamento, dias_funcionamento, horarios_semana, intervalo_agendamento, antecedencia_minima_horas, cancelamento_horas, logo_url")
       .limit(1).single(),
     supabase.from("profissionais")
       .select("id, nome, cargo, email, ativo")
@@ -61,6 +62,12 @@ export default async function ConfiguracoesPage({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
             {/* Coluna principal */}
             <div className="lg:col-span-2 space-y-5">
+              {/* Logo */}
+              <div className="card p-6">
+                <h3 className="mb-4">Logo do estabelecimento</h3>
+                <LogoUpload salaoId={config?.id ?? ""} currentUrl={(config as any)?.logo_url} />
+              </div>
+
               {/* Dados do salão */}
               <div className="card p-6">
                 <h3 className="mb-4">Dados do estabelecimento</h3>

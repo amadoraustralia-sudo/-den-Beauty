@@ -9,6 +9,7 @@ export async function salvarConfiguracoes(formData: FormData) {
   const telefone           = (formData.get("telefone") as string)?.trim() ?? null;
   const email              = (formData.get("email") as string)?.trim() ?? null;
   const endereco           = (formData.get("endereco") as string)?.trim() ?? null;
+  const logo_url           = (formData.get("logo_url") as string) || null;
   const horario_abertura   = (formData.get("horario_abertura") as string) || "09:00";
   const horario_fechamento = (formData.get("horario_fechamento") as string) || "19:00";
   const intervalo          = parseInt(formData.get("intervalo_agendamento") as string) || 30;
@@ -48,6 +49,7 @@ export async function salvarConfiguracoes(formData: FormData) {
       telefone: telefone || null,
       email: email || null,
       endereco: endereco || null,
+      logo_url,
       horario_abertura,
       horario_fechamento,
       dias_funcionamento,
@@ -71,6 +73,7 @@ export async function salvarConfiguracoes(formData: FormData) {
       telefone: telefone || null,
       email: email || null,
       endereco: endereco || null,
+      logo_url,
       horario_abertura,
       horario_fechamento,
       dias_funcionamento,

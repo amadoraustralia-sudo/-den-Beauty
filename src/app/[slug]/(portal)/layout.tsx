@@ -15,7 +15,7 @@ export default async function SlugPortalLayout({
   // Verifica se o salão existe
   const { data: config } = await supabase
     .from("configuracoes")
-    .select("id, nome_estabelecimento")
+    .select("id, nome_estabelecimento, logo_url")
     .eq("slug", slug)
     .single();
 
@@ -47,6 +47,8 @@ export default async function SlugPortalLayout({
       <PortalNav
         nomeCliente={nomeCliente ?? user.email ?? undefined}
         slug={slug}
+        salonName={config.nome_estabelecimento ?? undefined}
+        salonLogoUrl={(config as any).logo_url ?? undefined}
       />
       <main className="flex-1 overflow-auto pb-20 lg:pb-0">
         {children}
