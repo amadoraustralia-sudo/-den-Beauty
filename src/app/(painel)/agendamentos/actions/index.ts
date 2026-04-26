@@ -17,7 +17,7 @@ export async function atualizarStatusAgendamento(id: string, status: StatusValid
   if (status === "concluido") {
     const { data: ag } = await supabase
       .from("agendamentos")
-      .select("id, data, valor, profissional_id, servicos(preco)")
+      .select("id, data, valor, profissional_id, salao_id, servicos(preco)")
       .eq("id", id)
       .single();
 

@@ -62,8 +62,10 @@ export async function criarAgendamento(formData: FormData) {
     origem: "admin",
   });
 
-  // Nunca expor detalhes internos do banco ao cliente
-  if (error) return { error: "Erro ao criar agendamento. Tente novamente." };
+  if (error) {
+    console.error("[criarAgendamento]", error.code, error.message);
+    return { error: "Erro ao criar agendamento. Tente novamente." };
+  }
 
   redirect("/agendamentos?toast=criado");
 }

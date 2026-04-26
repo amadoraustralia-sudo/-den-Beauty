@@ -23,7 +23,7 @@ export default function CadastroPortalPage() {
     if (!form.nome.trim())         e.nome = "Obrigatório";
     if (!form.email.trim())        e.email = "Obrigatório";
     if (!form.telefone.trim())     e.telefone = "Obrigatório";
-    if (form.password.length < 12) e.password = "Mínimo 12 caracteres";
+    if (!form.password) e.password = "Obrigatório";
     if (form.password !== form.confirm) e.confirm = "Senhas não coincidem";
     if (!aceite)                   e.aceite = "Aceite os termos para continuar";
     setErros(e);
@@ -132,7 +132,7 @@ export default function CadastroPortalPage() {
               <label className="label">Senha <span style={{ color: "var(--danger)" }}>*</span></label>
               <input
                 type="password" value={form.password} onChange={(e) => set("password", e.target.value)}
-                placeholder="Mínimo 12 caracteres" className="input"
+                placeholder="Crie uma senha" className="input"
                 style={erros.password ? errStyle : {}}
               />
               {erros.password && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{erros.password}</p>}

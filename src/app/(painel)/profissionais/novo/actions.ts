@@ -29,7 +29,10 @@ export async function criarProfissional(formData: FormData) {
     salao_id,
   });
 
-  if (error) return { error: "Erro ao criar profissional. Tente novamente." };
+  if (error) {
+    console.error("[criarProfissional]", error.code, error.message);
+    return { error: "Erro ao criar profissional. Tente novamente." };
+  }
 
   redirect("/profissionais?toast=criado");
 }

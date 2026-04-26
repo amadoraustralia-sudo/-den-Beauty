@@ -24,7 +24,10 @@ export async function criarServico(formData: FormData) {
     nome, categoria, duracao_min, preco, descricao, ativo: true, salao_id,
   });
 
-  if (error) return { error: "Erro ao criar serviço. Tente novamente." };
+  if (error) {
+    console.error("[criarServico]", error.code, error.message);
+    return { error: "Erro ao criar serviço. Tente novamente." };
+  }
 
   redirect("/servicos?toast=criado");
 }

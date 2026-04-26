@@ -48,6 +48,9 @@ export async function atualizarAgendamento(formData: FormData) {
     .eq("id", id)
     .eq("salao_id", salao_id);
 
-  if (error) return { error: "Erro ao salvar. Tente novamente." };
+  if (error) {
+    console.error("[atualizarAgendamento]", error.code, error.message);
+    return { error: "Erro ao salvar. Tente novamente." };
+  }
   redirect("/agendamentos?toast=atualizado");
 }

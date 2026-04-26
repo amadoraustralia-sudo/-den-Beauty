@@ -24,7 +24,10 @@ export async function atualizarCliente(formData: FormData) {
     profissional_preferido_id: (formData.get("profissional_preferido_id") as string) || null,
   }).eq("id", id).eq("salao_id", salao_id);
 
-  if (error) return { error: "Erro ao atualizar cliente. Tente novamente." };
+  if (error) {
+    console.error("[atualizarCliente]", error.code, error.message);
+    return { error: "Erro ao atualizar cliente. Tente novamente." };
+  }
 
   redirect(`/clientes/${id}?toast=atualizado`);
 }

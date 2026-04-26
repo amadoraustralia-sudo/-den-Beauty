@@ -30,7 +30,10 @@ export async function atualizarProfissional(formData: FormData) {
     especialidades:      especialidades.length > 0 ? especialidades : null,
   }).eq("id", id).eq("salao_id", salao_id);
 
-  if (error) return { error: "Erro ao atualizar profissional. Tente novamente." };
+  if (error) {
+    console.error("[atualizarProfissional]", error.code, error.message);
+    return { error: "Erro ao atualizar profissional. Tente novamente." };
+  }
 
   redirect("/profissionais?toast=atualizado");
 }

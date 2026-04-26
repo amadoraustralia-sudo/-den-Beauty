@@ -23,7 +23,10 @@ export async function criarCliente(formData: FormData) {
     salao_id,
   });
 
-  if (error) return { error: "Erro ao criar cliente. Tente novamente." };
+  if (error) {
+    console.error("[criarCliente]", error.code, error.message);
+    return { error: "Erro ao criar cliente. Tente novamente." };
+  }
 
   redirect("/clientes?toast=criado");
 }

@@ -15,10 +15,32 @@ export async function getSalon() {
   return data ?? null;
 }
 
-/** Retorna apenas o ID do salão do admin logado */
+/** Retorna apenas o ID do salão do admin logado.
+ *  Também sincroniza profiles.salao_id se necessário, para que as políticas
+ *  RLS (get_my_salao_id) funcionem corretamente em inserts/updates. */
 export async function getSalaoId(): Promise<string | null> {
   const salon = await getSalon();
-  return salon?.id ?? null;
+  if (!salon?.id) return null;
+
+  // Garante que profiles.salao_id está sincronizado com o salão encontrado
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("salao_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profile && profile.salao_id !== salon.id) {
+      await supabase
+        .from("profiles")
+        .update({ salao_id: salon.id })
+        .eq("id", user.id);
+    }
+  }
+
+  return salon.id;
 }
 
 /** Busca um salão pelo slug (para o portal do cliente) */
