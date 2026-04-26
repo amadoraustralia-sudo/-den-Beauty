@@ -9,7 +9,11 @@ ALTER TABLE configuracoes
 ALTER TABLE profissionais
   ADD COLUMN IF NOT EXISTS horarios_semana jsonb DEFAULT NULL;
 
--- 3. Garantir colunas em horarios_bloqueados
+-- 3. Criar/garantir tabela horarios_bloqueados
+CREATE TABLE IF NOT EXISTS horarios_bloqueados (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid()
+);
+
 ALTER TABLE horarios_bloqueados
   ADD COLUMN IF NOT EXISTS salao_id uuid REFERENCES configuracoes(id),
   ADD COLUMN IF NOT EXISTS profissional_id uuid REFERENCES profissionais(id),
