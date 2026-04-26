@@ -26,7 +26,7 @@ export default async function ConfiguracoesPage({
 
   const [{ data: config }, { data: profissionais }] = await Promise.all([
     supabase.from("configuracoes")
-      .select("id, nome_estabelecimento, slug, telefone, email, endereco, horario_abertura, horario_fechamento, dias_funcionamento, intervalo_agendamento, antecedencia_minima_horas, cancelamento_horas")
+      .select("id, nome_estabelecimento, slug, telefone, email, endereco, horario_abertura, horario_fechamento, dias_funcionamento, horarios_semana, intervalo_agendamento, antecedencia_minima_horas, cancelamento_horas")
       .limit(1).single(),
     supabase.from("profissionais")
       .select("id, nome, cargo, email, ativo")
