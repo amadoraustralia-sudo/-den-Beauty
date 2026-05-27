@@ -63,6 +63,7 @@ export default function CadastroPortalPage() {
       p_nome: form.nome.trim(),
       p_email: form.email.trim(),
       p_telefone: form.telefone.trim(),
+      p_salao_id: process.env.NEXT_PUBLIC_SALAO_ID ?? null,
     });
 
     router.push("/agendar/inicio?toast=bemvindo");
