@@ -57,22 +57,13 @@ export default function CadastroPortalPage() {
       return;
     }
 
-    // 2. Criar registro na tabela clientes com auth_user_id
-    const { error: clienteError } = await supabase.from("clientes").insert({
-      nome: form.nome.trim(),
-      email: form.email.trim(),
-      telefone: form.telefone.trim(),
-      auth_user_id: authData.user.id,
+    // 2. Criar/vincular registro na tabela clientes via função SECURITY DEFINER
+    // (garante salao_id correto e funciona mesmo sem sessão ativa)
+    await supabase.rpc("register_portal_client", {
+      p_nome: form.nome.trim(),
+      p_email: form.email.trim(),
+      p_telefone: form.telefone.trim(),
     });
-
-    if (clienteError) {
-      // Se já existe cliente com esse email, apenas vincular o auth_user_id
-      await supabase
-        .from("clientes")
-        .update({ auth_user_id: authData.user.id })
-        .eq("email", form.email.trim())
-        .is("auth_user_id", null);
-    }
 
     router.push("/agendar/inicio?toast=bemvindo");
     router.refresh();

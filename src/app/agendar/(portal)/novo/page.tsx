@@ -30,7 +30,7 @@ export default async function NovoAgendamentoPortalPage() {
       ? supabase.from("profissionais").select("id, nome, especialidades").eq("salao_id", salaoId).eq("ativo", true).order("nome")
       : Promise.resolve({ data: [] }),
     salaoId
-      ? supabase.from("configuracoes").select("dias_funcionamento").eq("salao_id", salaoId).limit(1).single()
+      ? supabase.from("configuracoes").select("dias_funcionamento").eq("id", salaoId).limit(1).single()
       : Promise.resolve({ data: null }),
   ]);
 
