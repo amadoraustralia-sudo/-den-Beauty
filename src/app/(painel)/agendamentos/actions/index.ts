@@ -13,40 +13,63 @@ export async function atualizarStatusAgendamento(id: string, status: StatusValid
 
   await supabase.from("agendamentos").update({ status }).eq("id", id);
 
-  // Calcula comissão automaticamente ao concluir
+  // Calcula comissão e cria lançamento financeiro automaticamente ao concluir
   if (status === "concluido") {
     const { data: ag } = await supabase
       .from("agendamentos")
-      .select("id, data, valor, profissional_id, salao_id, servicos(preco)")
+      .select("id, data, valor, profissional_id, salao_id, servicos(nome, preco), clientes(nome)")
       .eq("id", id)
       .single();
 
-    if (ag?.profissional_id) {
-      const { data: prof } = await supabase
-        .from("profissionais")
-        .select("percentual_comissao")
-        .eq("id", ag.profissional_id)
-        .single();
-
+    if (ag) {
       const svc = Array.isArray(ag.servicos) ? ag.servicos[0] : ag.servicos;
       const valorServico = Number(ag.valor ?? (svc as { preco: number } | null)?.preco ?? 0);
-      const percentual = Number(prof?.percentual_comissao ?? 0);
-      const valorComissao = valorServico * (percentual / 100);
+      const salaoId = (ag as { salao_id?: string }).salao_id ?? null;
+      const nomeServico = (svc as { nome: string } | null)?.nome ?? "Atendimento";
+      const nomeCliente = (Array.isArray(ag.clientes) ? ag.clientes[0] : ag.clientes as { nome: string } | null)?.nome;
+      const dataAg = ag.data ?? new Date().toISOString().split("T")[0];
 
-      if (percentual > 0) {
-        // Upsert para evitar duplicatas se o status for alterado novamente
-        await supabase.from("comissoes").upsert(
+      // Lançamento financeiro automático (upsert por agendamento_id)
+      if (valorServico > 0 && salaoId) {
+        await supabase.from("transacoes").upsert(
           {
-            agendamento_id: ag.id,
-            profissional_id: ag.profissional_id,
-            valor_servico: valorServico,
-            percentual,
-            valor_comissao: valorComissao,
-            data: ag.data ?? new Date().toISOString().split("T")[0],
-            salao_id: (ag as { salao_id?: string }).salao_id ?? null,
+            agendamento_id: id,
+            tipo: "entrada",
+            descricao: nomeCliente ? `${nomeServico} — ${nomeCliente}` : nomeServico,
+            valor: valorServico,
+            data: dataAg,
+            categoria: "Serviço",
+            salao_id: salaoId,
           },
           { onConflict: "agendamento_id" }
         );
+      }
+
+      // Comissão do profissional
+      if (ag.profissional_id) {
+        const { data: prof } = await supabase
+          .from("profissionais")
+          .select("percentual_comissao")
+          .eq("id", ag.profissional_id)
+          .single();
+
+        const percentual = Number(prof?.percentual_comissao ?? 0);
+        const valorComissao = valorServico * (percentual / 100);
+
+        if (percentual > 0) {
+          await supabase.from("comissoes").upsert(
+            {
+              agendamento_id: ag.id,
+              profissional_id: ag.profissional_id,
+              valor_servico: valorServico,
+              percentual,
+              valor_comissao: valorComissao,
+              data: dataAg,
+              salao_id: salaoId,
+            },
+            { onConflict: "agendamento_id" }
+          );
+        }
       }
     }
   }

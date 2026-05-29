@@ -44,6 +44,11 @@ export async function criarAgendamento(formData: FormData) {
   const valorRaw = parseFloat(formData.get("valor") as string);
   const valor = isNaN(valorRaw) || valorRaw < 0 ? null : valorRaw;
 
+  const servicosAdicionaisRaw = (formData.get("servicos_adicionais") as string)?.trim() || "[]";
+  let servicos_adicionais: unknown[] = [];
+  try { servicos_adicionais = JSON.parse(servicosAdicionaisRaw); } catch { servicos_adicionais = []; }
+  if (!Array.isArray(servicos_adicionais)) servicos_adicionais = [];
+
   const salao_id = await getSalaoId();
   if (!salao_id) redirect("/login");
 
@@ -60,11 +65,45 @@ export async function criarAgendamento(formData: FormData) {
     observacoes,
     salao_id,
     origem: "admin",
+    servicos_adicionais,
   });
 
   if (error) {
     console.error("[criarAgendamento]", error.code, error.message);
     return { error: "Erro ao criar agendamento. Tente novamente." };
+  }
+
+  // Lançamento financeiro automático se criado já como concluido
+  if (status === "concluido" && valor !== null && valor > 0) {
+    const { data: ag } = await supabase
+      .from("agendamentos")
+      .select("id, clientes(nome), servicos(nome)")
+      .eq("salao_id", salao_id)
+      .eq("cliente_id", cliente_id)
+      .eq("servico_id", servico_id)
+      .eq("data", data)
+      .eq("hora", hora)
+      .single();
+    if (ag) {
+      const svc = (Array.isArray(ag.servicos) ? ag.servicos[0] : ag.servicos) as { nome: string } | null;
+      const cli = (Array.isArray(ag.clientes) ? ag.clientes[0] : ag.clientes) as { nome: string } | null;
+      const descricao = svc?.nome
+        ? (cli?.nome ? `${svc.nome} — ${cli.nome}` : svc.nome)
+        : "Atendimento";
+      await supabase.from("transacoes").upsert(
+        {
+          agendamento_id: ag.id,
+          tipo: "entrada",
+          descricao,
+          valor,
+          data,
+          categoria: "Serviço",
+          salao_id,
+          forma_pagamento: forma_pagamento ?? null,
+        },
+        { onConflict: "agendamento_id" }
+      );
+    }
   }
 
   redirect("/agendamentos?toast=criado");

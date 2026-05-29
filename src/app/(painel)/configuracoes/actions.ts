@@ -4,6 +4,18 @@ import { createClient } from "@/lib/supabase/server";
 import { getSalon } from "@/lib/supabase/salon";
 import { redirect } from "next/navigation";
 
+export async function salvarLogoUrl(logoUrl: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Não autenticado" };
+  const { error } = await supabase
+    .from("configuracoes")
+    .update({ logo_url: logoUrl })
+    .eq("owner_user_id", user.id);
+  if (error) return { error: error.message };
+  return {};
+}
+
 export async function salvarConfiguracoes(formData: FormData) {
   const nome               = (formData.get("nome_estabelecimento") as string)?.trim();
   const telefone           = (formData.get("telefone") as string)?.trim() ?? null;

@@ -1,3 +1,4 @@
+
 -- =============================================
 -- SCHEMA COMPLETO — Éden Beauty
 -- Cole no Supabase → SQL Editor → New query
@@ -15,7 +16,7 @@ CREATE TABLE IF NOT EXISTS configuracoes (
   endereco                  TEXT,
   horario_abertura          TEXT DEFAULT '09:00',
   horario_fechamento        TEXT DEFAULT '19:00',
-  dias_funcionamento        TEXT[] DEFAULT ARRAY['seg','ter','qua','qui','sex'],
+  dias_funcionamento        TEXT[] DEFAULT ARRAY['seg','ter','qua','qui','seç~péz +  0x'],
   intervalo_agendamento     INTEGER DEFAULT 30,
   antecedencia_minima_horas INTEGER DEFAULT 2,
   cancelamento_horas        INTEGER DEFAULT 24,

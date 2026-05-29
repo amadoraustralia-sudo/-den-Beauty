@@ -114,39 +114,44 @@ const navGroups = [
   },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  initialLogoUrl?: string | null;
+  initialSalonName?: string | null;
+}
+
+function toInitials(name: string) {
+  return name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+}
+
+export default function Sidebar({ initialLogoUrl, initialSalonName }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [salonName, setSalonName] = useState("Éden Beauty");
-  const [salonInitials, setSalonInitials] = useState("EB");
-  const [salonLogoUrl, setSalonLogoUrl] = useState<string | null>(null);
+  const [salonName, setSalonName] = useState(initialSalonName ?? "Meu Salão");
+  const [salonInitials, setSalonInitials] = useState(
+    initialSalonName ? toInitials(initialSalonName) : "MS"
+  );
+  const [salonLogoUrl, setSalonLogoUrl] = useState<string | null>(initialLogoUrl ?? null);
+
+  // Sincroniza quando o layout re-renderiza no servidor (navegação entre páginas)
+  useEffect(() => {
+    setSalonLogoUrl(initialLogoUrl ?? null);
+  }, [initialLogoUrl]);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      supabase
-        .from("configuracoes")
-        .select("nome_estabelecimento, logo_url")
-        .eq("owner_user_id", user.id)
-        .single()
-        .then(({ data }) => {
-          if (data?.nome_estabelecimento) {
-            setSalonName(data.nome_estabelecimento);
-            const initials = data.nome_estabelecimento
-              .split(" ")
-              .filter(Boolean)
-              .slice(0, 2)
-              .map((w: string) => w[0].toUpperCase())
-              .join("");
-            setSalonInitials(initials);
-          }
-          if ((data as any)?.logo_url) {
-            setSalonLogoUrl((data as any).logo_url);
-          }
-        });
-    });
+    const name = initialSalonName ?? "Éden Beauty";
+    setSalonName(name);
+    setSalonInitials(toInitials(name));
+  }, [initialSalonName]);
+
+  // Atualiza instantaneamente após upload (sem precisar navegar)
+  useEffect(() => {
+    function onLogoUpdated(e: Event) {
+      const url = (e as CustomEvent<{ url: string }>).detail?.url;
+      if (url) setSalonLogoUrl(url);
+    }
+    window.addEventListener("logo-updated", onLogoUpdated);
+    return () => window.removeEventListener("logo-updated", onLogoUpdated);
   }, []);
 
   // Escuta evento do botão hamburguer no Topbar

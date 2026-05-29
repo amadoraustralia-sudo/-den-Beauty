@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { atualizarAgendamento } from "./actions";
+import { atualizarAgendamento, deletarAgendamento } from "./actions";
 
 interface Slot { hora: string; profissional_id: string; profissional_nome: string; disponivel: boolean }
 
@@ -17,8 +17,12 @@ const FORMAS_PAGAMENTO = [
 const errStyle = { borderColor: "var(--danger)", boxShadow: "0 0 0 2px rgb(239 68 68 / 0.15)" };
 
 interface Cliente { id: string; nome: string }
-interface Servico { id: string; nome: string; preco: number }
+interface Servico { id: string; nome: string; preco: number; duracao_min: number }
 interface Profissional { id: string; nome: string }
+
+function formatPreco(v: number) {
+  return `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
+}
 
 export default function EditarAgendamentoPage() {
   const router = useRouter();
@@ -27,6 +31,8 @@ export default function EditarAgendamentoPage() {
 
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [serverError, setServerError] = useState("");
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [servicos, setServicos] = useState<Servico[]>([]);
@@ -34,6 +40,7 @@ export default function EditarAgendamentoPage() {
   const [salaoId, setSalaoId] = useState<string | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [servicosAdicionais, setServicosAdicionais] = useState<Servico[]>([]);
   const [fields, setFields] = useState({
     cliente_id: "", servico_id: "", profissional_id: "",
     data: "", hora: "", valor: "", status: "aguardando",
@@ -46,13 +53,20 @@ export default function EditarAgendamentoPage() {
     if (erros[field]) setErros((e) => { const n = { ...e }; delete n[field]; return n; });
   }
 
+  const servicoPrincipal = servicos.find((s) => s.id === fields.servico_id) ?? null;
+  const duracaoTotal = (servicoPrincipal?.duracao_min ?? 0) + servicosAdicionais.reduce((acc, s) => acc + s.duracao_min, 0);
+
+  const servicosDisponiveis = servicos.filter(
+    (s) => s.id !== fields.servico_id && !servicosAdicionais.find((a) => a.id === s.id)
+  );
+
   useEffect(() => {
     async function load() {
       const supabase = createClient();
       const [{ data: ag }, { data: cls }, { data: svcs }, { data: profs }] = await Promise.all([
         supabase.from("agendamentos").select("*").eq("id", id).single(),
         supabase.from("clientes").select("id, nome").order("nome"),
-        supabase.from("servicos").select("id, nome, preco").eq("ativo", true).order("nome"),
+        supabase.from("servicos").select("id, nome, preco, duracao_min").eq("ativo", true).order("nome"),
         supabase.from("profissionais").select("id, nome").eq("ativo", true).order("nome"),
       ]);
       if (ag) {
@@ -68,6 +82,10 @@ export default function EditarAgendamentoPage() {
           forma_pagamento: ag.forma_pagamento ?? "",
           observacoes: ag.observacoes ?? "",
         });
+        // Load servicos_adicionais — validate against the actual servicos list later
+        if (Array.isArray(ag.servicos_adicionais)) {
+          setServicosAdicionais(ag.servicos_adicionais as Servico[]);
+        }
       }
       setClientes(cls ?? []);
       setServicos(svcs ?? []);
@@ -88,12 +106,13 @@ export default function EditarAgendamentoPage() {
       p_servico_id: fields.servico_id,
       p_profissional_id: fields.profissional_id || null,
       p_salao_id: salaoId,
+      p_duracao_total: duracaoTotal > 0 ? duracaoTotal : null,
     }).then(({ data }) => {
       if (!cancelled) { setSlots(data ?? []); setLoadingSlots(false); }
     });
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields.servico_id, fields.data, fields.profissional_id, salaoId]);
+  }, [fields.servico_id, fields.data, fields.profissional_id, salaoId, duracaoTotal]);
 
   const slotsUnicos = Array.from(
     slots.reduce<Map<string, Slot>>((map, s) => {
@@ -103,10 +122,37 @@ export default function EditarAgendamentoPage() {
     }, new Map()).values()
   );
 
+  const slotsComAtual = (() => {
+    if (!fields.hora || !salaoId || loadingSlots) return slotsUnicos;
+    const horaAtual = fields.hora.slice(0, 5);
+    if (slotsUnicos.some((s) => s.hora.slice(0, 5) === horaAtual)) return slotsUnicos;
+    return [
+      { hora: horaAtual, profissional_id: fields.profissional_id || "", profissional_nome: "", disponivel: true },
+      ...slotsUnicos,
+    ];
+  })();
+
   function handleServicoChange(servicoId: string) {
     const svc = servicos.find((s) => s.id === servicoId);
+    setServicosAdicionais([]);
     setFields((f) => ({ ...f, servico_id: servicoId, hora: "", valor: !f.valor && svc ? String(svc.preco) : f.valor }));
     if (erros.servico_id) setErros((e) => { const n = { ...e }; delete n.servico_id; return n; });
+  }
+
+  function adicionarServico(servicoId: string) {
+    if (!servicoId) return;
+    const svc = servicos.find((s) => s.id === servicoId);
+    if (!svc) return;
+    setServicosAdicionais((prev) => [...prev, svc]);
+    setFields((f) => ({ ...f, hora: "" }));
+  }
+
+  function removerServico(idx: number) {
+    setServicosAdicionais((prev) => {
+      const novo = prev.filter((_, i) => i !== idx);
+      setFields((f) => ({ ...f, hora: "" }));
+      return novo;
+    });
   }
 
   function handleDataChange(data: string) {
@@ -141,8 +187,15 @@ export default function EditarAgendamentoPage() {
     setServerError("");
     const fd = new FormData(ev.currentTarget);
     fd.set("id", id);
+    fd.set("servicos_adicionais", JSON.stringify(servicosAdicionais.map((s) => ({ id: s.id, nome: s.nome, preco: s.preco, duracao_min: s.duracao_min }))));
     const result = await atualizarAgendamento(fd);
     if (result?.error) { setServerError(result.error); setPending(false); }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    const result = await deletarAgendamento(id);
+    if (result?.error) { setServerError(result.error); setDeleting(false); setConfirmDelete(false); }
   }
 
   if (loading) return (
@@ -176,7 +229,7 @@ export default function EditarAgendamentoPage() {
           <input type="hidden" name="id" value={id} />
 
           <div>
-            <h4 className="mb-3" style={{ color: "var(--text-muted)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Cliente e serviço</h4>
+            <h4 className="mb-3" style={{ color: "var(--text-muted)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Cliente e serviços</h4>
             <div className="space-y-4">
               <div>
                 <label className="label">Cliente <span style={{ color: "var(--danger)" }}>*</span></label>
@@ -187,13 +240,57 @@ export default function EditarAgendamentoPage() {
                 {erros.cliente_id && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{erros.cliente_id}</p>}
               </div>
               <div>
-                <label className="label">Serviço <span style={{ color: "var(--danger)" }}>*</span></label>
+                <label className="label">Serviço principal <span style={{ color: "var(--danger)" }}>*</span></label>
                 <select name="servico_id" className="input select" value={fields.servico_id} onChange={(e) => handleServicoChange(e.target.value)} style={erros.servico_id ? errStyle : {}}>
                   <option value="">Selecione o serviço...</option>
-                  {servicos.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
+                  {servicos.map((s) => <option key={s.id} value={s.id}>{s.nome} — {s.duracao_min}min · {formatPreco(s.preco)}</option>)}
                 </select>
                 {erros.servico_id && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{erros.servico_id}</p>}
               </div>
+
+              {/* Serviços adicionais */}
+              {fields.servico_id && (
+                <div>
+                  {servicosAdicionais.length > 0 && (
+                    <div className="mb-2 space-y-1.5">
+                      {servicosAdicionais.map((s, i) => (
+                        <div
+                          key={s.id}
+                          className="flex items-center justify-between px-3 py-2 rounded-lg text-sm"
+                          style={{ background: "var(--bg-subtle)", border: "1px solid var(--border)" }}
+                        >
+                          <span style={{ color: "var(--text-primary)" }}>
+                            {s.nome} <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>— {s.duracao_min}min · {formatPreco(s.preco)}</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removerServico(i)}
+                            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "1rem", padding: "0 2px", lineHeight: 1 }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                        Total: <strong style={{ color: "var(--text-primary)" }}>{duracaoTotal}min</strong>
+                      </p>
+                    </div>
+                  )}
+                  {servicosDisponiveis.length > 0 && (
+                    <select
+                      className="input select"
+                      value=""
+                      onChange={(e) => adicionarServico(e.target.value)}
+                    >
+                      <option value="">+ Adicionar serviço</option>
+                      {servicosDisponiveis.map((s) => (
+                        <option key={s.id} value={s.id}>{s.nome} — {s.duracao_min}min · {formatPreco(s.preco)}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+
               <div>
                 <label className="label">Profissional</label>
                 <select name="profissional_id" className="input select" value={fields.profissional_id} onChange={(e) => handleProfissionalChange(e.target.value)}>
@@ -229,11 +326,11 @@ export default function EditarAgendamentoPage() {
                     <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                     <span className="text-sm">Carregando horários...</span>
                   </div>
-                ) : slotsUnicos.length === 0 ? (
+                ) : slotsComAtual.length === 0 ? (
                   <p className="text-sm py-1" style={{ color: "var(--text-muted)" }}>Sem horários disponíveis nesta data.</p>
                 ) : (
                   <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(68px, 1fr))" }}>
-                    {slotsUnicos.map((s) => {
+                    {slotsComAtual.map((s) => {
                       const hora = s.hora.slice(0, 5);
                       const selecionado = fields.hora === hora;
                       return (
@@ -300,6 +397,41 @@ export default function EditarAgendamentoPage() {
             <button type="submit" className="btn btn-primary" disabled={pending}>{pending ? "Salvando..." : "Salvar alterações"}</button>
           </div>
         </form>
+      </div>
+
+      <div className="mt-4 card p-4" style={{ borderColor: "#fecaca" }}>
+        {!confirmDelete ? (
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Excluir agendamento</p>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>Esta ação não pode ser desfeita.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="btn"
+              style={{ background: "#fff5f5", color: "#b91c1c", border: "1px solid #fecaca", fontSize: "0.8125rem" }}
+            >
+              Excluir
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm" style={{ color: "#b91c1c" }}>Confirmar exclusão?</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setConfirmDelete(false)} className="btn btn-secondary" style={{ fontSize: "0.8125rem" }}>Não</button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="btn"
+                style={{ background: "#b91c1c", color: "white", border: "none", fontSize: "0.8125rem" }}
+              >
+                {deleting ? "Excluindo..." : "Sim, excluir"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
