@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Éden Beauty — Proposta Comercial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand-900: #0E1A10;
+      --brand-800: #1C2B1E;
+      --brand-700: #263D29;
+      --brand-600: #2F5233;
+      --brand-500: #3D6B44;
+      --brand-400: #528A5A;
+      --brand-300: #7AB082;
+      --brand-200: #B3D4B8;
+      --brand-100: #DFF0E1;
+      --brand-50:  #F0F8F1;
+      --bg:        #FAFAF7;
+      --surface:   #FFFFFF;
+      --border:    #E4E4DC;
+      --text:      #141414;
+      --muted:     #6B6B63;
+      --light:     #F5F5F0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--brand-800);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(90,160,100,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--brand-200);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 40px;
+    }
+
+    .hero-badge span {
+      width: 5px;
+      height: 5px;
+      background: var(--brand-300);
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3rem, 7vw, 6rem);
+      font-weight: 300;
+      color: #fff;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--brand-200);
+    }
+
+    .hero-sub {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+      font-weight: 300;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 56px;
+      font-style: italic;
+    }
+
+    .hero-desc {
+      max-width: 540px;
+      font-size: 16px;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.8;
+      margin-bottom: 64px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .hero-stat {
+      text-align: center;
+    }
+
+    .hero-stat-n {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.5rem;
+      font-weight: 600;
+      color: var(--brand-200);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .hero-stat-l {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.05em;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255,255,255,0.25);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .scroll-hint svg {
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(5px); }
+    }
+
+    /* ── SECTION BASE ── */
+    section {
+      padding: 96px 24px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .section-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--brand-500);
+      margin-bottom: 16px;
+    }
+
+    .section-eyebrow::before {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--brand-400);
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 4vw, 3.25rem);
+      font-weight: 400;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      color: var(--brand-800);
+      margin-bottom: 16px;
+    }
+
+    .section-title em {
+      font-style: italic;
+      color: var(--brand-500);
+    }
+
+    .section-lead {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.8;
+      max-width: 560px;
+    }
+
+    /* ── DOR → SOLUÇÃO ── */
+    .pain-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .pain-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      margin-top: 64px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .pain-item {
+      padding: 36px 40px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      transition: background 0.2s;
+    }
+
+    .pain-item:nth-child(odd) {
+      border-right: 1px solid var(--border);
+    }
+
+    .pain-item:nth-last-child(-n+2) {
+      border-bottom: none;
+    }
+
+    .pain-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 18px;
+    }
+
+    .pain-icon.red   { background: #FEE2E2; }
+    .pain-icon.green { background: var(--brand-100); }
+
+    .pain-text strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .pain-text p {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── FEATURES ── */
+    .features-section {
+      background: var(--bg);
+    }
+
+    .features-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: end;
+      margin-bottom: 72px;
+    }
+
+    .feature-blocks {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .feature-block {
+      background: var(--surface);
+      padding: 36px 32px;
+    }
+
+    .feature-block:first-child { border-radius: 18px 0 0 0; }
+    .feature-block:nth-child(3) { border-radius: 0 18px 0 0; }
+    .feature-block:nth-last-child(3) { border-radius: 0 0 0 18px; }
+    .feature-block:last-child { border-radius: 0 0 18px 0; }
+
+    .feature-number {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.5rem;
+      font-weight: 600;
+      color: var(--brand-100);
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--brand-50);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      color: var(--brand-600);
+    }
+
+    .feature-block h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--brand-800);
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .feature-block p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ── PORTAL DO CLIENTE ── */
+    .portal-section {
+      background: var(--brand-800);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .portal-section::before {
+      content: '';
+      position: absolute;
+      top: -120px;
+      right: -120px;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(90,160,100,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .portal-section .section-title { color: #fff; }
+    .portal-section .section-lead  { color: rgba(255,255,255,0.55); }
+    .portal-section .section-eyebrow { color: var(--brand-300); }
+    .portal-section .section-eyebrow::before { background: var(--brand-400); }
+
+    .portal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 2px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-top: 64px;
+    }
+
+    .portal-card {
+      background: rgba(255,255,255,0.04);
+      padding: 40px 36px;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .portal-card-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem;
+      font-weight: 300;
+      color: rgba(255,255,255,0.1);
+      line-height: 1;
+      margin-bottom: 24px;
+    }
+
+    .portal-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .portal-card p {
+      font-size: 13.5px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.7;
+    }
+
+    .portal-card .tag {
+      display: inline-block;
+      background: rgba(122,176,130,0.15);
+      color: var(--brand-200);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+
+    /* ── BENEFÍCIOS ── */
+    .benefits-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+
+    .benefits-list {
+      margin-top: 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .benefit-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      align-items: stretch;
+    }
+
+    .benefit-row:last-child { border-bottom: none; }
+
+    .benefit-label {
+      padding: 32px 36px;
+      border-right: 1px solid var(--border);
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .benefit-label-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--brand-100);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--brand-600);
+      font-size: 16px;
+    }
+
+    .benefit-label strong {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--brand-800);
+    }
+
+    .benefit-desc {
+      padding: 32px 40px;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.75;
+      display: flex;
+      align-items: center;
+    }
+
+    /* ── DIFERENCIAIS ── */
+    .diff-section {
+      background: var(--bg);
+    }
+
+    .diff-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-top: 64px;
+    }
+
+    .diff-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      display: flex;
+      gap: 20px;
+    }
+
+    .diff-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--brand-50);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--brand-600);
+    }
+
+    .diff-card h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--brand-800);
+      margin-bottom: 6px;
+    }
+
+    .diff-card p {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ── CTA FINAL ── */
+    .cta-section {
+      background: var(--brand-800);
+      text-align: center;
+      padding: 120px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% 100%, rgba(90,160,100,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-section .section-title {
+      color: #fff;
+      max-width: 640px;
+      margin: 0 auto 20px;
+    }
+
+    .cta-section .section-eyebrow { color: var(--brand-300); }
+    .cta-section .section-eyebrow::before { background: var(--brand-400); }
+
+    .cta-lead {
+      font-size: 16px;
+      color: rgba(255,255,255,0.5);
+      max-width: 480px;
+      margin: 0 auto 56px;
+      line-height: 1.8;
+    }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--brand-400);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 16px 36px;
+      border-radius: 100px;
+      text-decoration: none;
+      letter-spacing: 0.01em;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .cta-btn:hover {
+      background: var(--brand-300);
+      transform: translateY(-2px);
+    }
+
+    .cta-fine {
+      margin-top: 24px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.25);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--brand-900);
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    .footer-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--brand-300);
+      letter-spacing: 0.02em;
+      margin-bottom: 12px;
+    }
+
+    footer p {
+      font-size: 12px;
+      color: rgba(255,255,255,0.25);
+    }
+
+    /* ── DIVIDER ── */
+    .ornament {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 48px 0;
+    }
+
+    .ornament::before,
+    .ornament::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      max-width: 120px;
+    }
+
+    .ornament-dot {
+      width: 5px;
+      height: 5px;
+      background: var(--brand-300);
+      border-radius: 50%;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      section { padding: 72px 20px; }
+
+      .features-header   { grid-template-columns: 1fr; gap: 32px; }
+      .feature-blocks    { grid-template-columns: 1fr; }
+      .pain-grid         { grid-template-columns: 1fr; }
+      .portal-grid       { grid-template-columns: 1fr; }
+      .diff-grid         { grid-template-columns: 1fr; }
+      .benefit-row       { grid-template-columns: 1fr; }
+      .benefit-label     { border-right: none; border-bottom: 1px solid var(--border); }
+
+      .pain-item:nth-child(odd) { border-right: none; }
+
+      .feature-block:first-child,
+      .feature-block:nth-child(3),
+      .feature-block:nth-last-child(3),
+      .feature-block:last-child { border-radius: 0; }
+
+      .hero-stats { gap: 32px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
+<section class="hero">
+  <div class="hero-badge">
+    <span></span>
+    Gestão para salões de beleza
+  </div>
+
+  <h1>Éden <em>Beauty</em></h1>
+  <p class="hero-sub">O sistema que cuida do seu negócio enquanto você cuida dos seus clientes</p>
+
+  <p class="hero-desc">
+    Uma plataforma completa de gestão para donas de salão que querem organização financeira, controle da equipe e agendamento online — tudo em um só lugar, com a elegância que o seu negócio merece.
+  </p>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-n">8 min</div>
+      <div class="hero-stat-l">para configurar do zero</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-n">24/7</div>
+      <div class="hero-stat-l">agendamentos recebidos</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-n">100%</div>
+      <div class="hero-stat-l">dos dados centralizados</div>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>
+    conheça a plataforma
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ DOR / SOLUÇÃO ═══════════════════════════════ -->
+<section class="pain-section">
+  <div class="container">
+    <div class="section-eyebrow">O desafio</div>
+    <h2 class="section-title">Você reconhece<br><em>algum desses cenários?</em></h2>
+    <p class="section-lead">Gerir um salão vai muito além de cortar, colorir e cuidar. O Éden Beauty nasceu para eliminar essas dores.</p>
+
+    <div class="pain-grid">
+
+      <div class="pain-item">
+        <div class="pain-icon red">😮‍💨</div>
+        <div class="pain-text">
+          <strong>Agenda no caderno ou no WhatsApp</strong>
+          <p>Conflito de horários, espaços não aproveitados e clientes que ficam sem confirmação.</p>
+        </div>
+      </div>
+
+      <div class="pain-item">
+        <div class="pain-icon green">✅</div>
+        <div class="pain-text">
+          <strong>Agenda online em tempo real</strong>
+          <p>Cada profissional com sua grade de horários. Clientes agendam sozinhos, 24h por dia.</p>
+        </div>
+      </div>
+
+      <div class="pain-item">
+        <div class="pain-icon red">😞</div>
+        <div class="pain-text">
+          <strong>Sem controle do financeiro</strong>
+          <p>O dinheiro entra, o dinheiro sai — mas você não sabe ao certo se o negócio lucrou.</p>
+        </div>
+      </div>
+
+      <div class="pain-item">
+        <div class="pain-icon green">✅</div>
+        <div class="pain-text">
+          <strong>Receita, despesas e lucro sempre visíveis</strong>
+          <p>Registro de entradas e saídas por categoria, com lucro calculado automaticamente.</p>
+        </div>
+      </div>
+
+      <div class="pain-item">
+        <div class="pain-icon red">🤯</div>
+        <div class="pain-text">
+          <strong>Comissão calculada na mão</strong>
+          <p>Planilhas, calculadoras e desentendimentos no fechamento com os profissionais.</p>
+        </div>
+      </div>
+
+      <div class="pain-item">
+        <div class="pain-icon green">✅</div>
+        <div class="pain-text">
+          <strong>Comissões automáticas por atendimento</strong>
+          <p>O sistema calcula e acumula a cada serviço concluído. Fechamento em segundos.</p>
+        </div>
+      </div>
+
+      <div class="pain-item">
+        <div class="pain-icon red">😕</div>
+        <div class="pain-text">
+          <strong>Clientes sumindo sem você perceber</strong>
+          <p>Você só descobre que perdeu clientes quando as cadeiras estão vazias.</p>
+        </div>
+      </div>
+
+      <div class="pain-item">
+        <div class="pain-icon green">✅</div>
+        <div class="pain-text">
+          <strong>Alerta de clientes inativos</strong>
+          <p>Identifique quem não aparece há mais de 30 dias e reative antes que seja tarde.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ FUNCIONALIDADES ═══════════════════════════════ -->
+<section class="features-section">
+  <div class="container">
+    <div class="features-header">
+      <div>
+        <div class="section-eyebrow">O que está incluído</div>
+        <h2 class="section-title">Tudo que seu<br>salão precisa,<br><em>unificado</em></h2>
+      </div>
+      <p class="section-lead">
+        Nove módulos integrados entre si. Os dados de agendamento alimentam o financeiro, que alimenta os relatórios, que orientam suas decisões — sem retrabalho.
+      </p>
+    </div>
+
+    <div class="feature-blocks">
+
+      <div class="feature-block">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </div>
+        <h3>Dashboard em tempo real</h3>
+        <p>Agendamentos do dia, receita do mês, ticket médio, clientes inativos e gráficos de faturamento — tudo na tela inicial.</p>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </div>
+        <h3>Agenda & Agendamentos</h3>
+        <p>Calendário semanal por profissional, filtros por status, alteração de status com um clique e criação de novos agendamentos em segundos.</p>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3>Gestão de Clientes</h3>
+        <p>Ficha completa com alergias, preferências, histórico de visitas e total gasto. Filtro de clientes inativos para reativação.</p>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="8" r="4"/><path d="M6 20v-1a6 6 0 0 1 12 0v1"/><path d="M18.5 14.5 20 16l2-2"/></svg>
+        </div>
+        <h3>Equipe & Profissionais</h3>
+        <p>Cadastro com especialidades, percentual de comissão e período de fechamento. Métricas individuais de atendimentos e faturamento.</p>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+        </div>
+        <h3>Catálogo de Serviços</h3>
+        <p>Serviços agrupados por categoria com preço, duração e status ativo/inativo. Alimenta automaticamente o agendamento online.</p>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3>Financeiro Completo</h3>
+        <p>Entradas e saídas categorizadas por mês. Receita, despesas e lucro estimado sempre atualizados. Sem planilha.</p>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        </div>
+        <h3>Relatórios & Análises</h3>
+        <p>Taxa de conclusão, top serviços, desempenho por profissional, comissões totais — por período personalizável.</p>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        </div>
+        <h3>Configurações do Salão</h3>
+        <p>Horários de funcionamento, dias da semana, intervalo entre slots, antecedência mínima e prazo de cancelamento.</p>
+      </div>
+
+      <div class="feature-block">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <h3>Comissões Automáticas</h3>
+        <p>Calculadas a cada atendimento concluído com base no percentual configurado. Relatório detalhado por profissional e por mês.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ PORTAL DO CLIENTE ═══════════════════════════════ -->
+<section class="portal-section">
+  <div class="container">
+    <div class="section-eyebrow">Para os seus clientes</div>
+    <h2 class="section-title">Cada salão tem sua<br><em>página exclusiva de agendamento</em></h2>
+    <p class="section-lead">
+      Um link único para o seu salão. As suas clientes acessam, escolhem o serviço, o profissional e o horário — sem precisar te chamar no WhatsApp.
+    </p>
+
+    <div class="portal-grid">
+
+      <div class="portal-card">
+        <div class="portal-card-num">01</div>
+        <div class="tag">Link próprio</div>
+        <h3>URL exclusiva do seu salão</h3>
+        <p>Compartilhe o link nas redes sociais, no WhatsApp ou no Instagram. Cada salão tem sua própria página personalizada.</p>
+      </div>
+
+      <div class="portal-card">
+        <div class="portal-card-num">02</div>
+        <div class="tag">Fluxo intuitivo</div>
+        <h3>Agendamento em 4 passos</h3>
+        <p>A cliente escolhe o serviço, o profissional, a data disponível e confirma. O horário é bloqueado instantaneamente.</p>
+      </div>
+
+      <div class="portal-card">
+        <div class="portal-card-num">03</div>
+        <div class="tag">Área da cliente</div>
+        <h3>Histórico e perfil próprio</h3>
+        <p>Cada cliente tem sua conta com histórico de atendimentos, dados pessoais, alergias e opção de cancelar dentro do prazo.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ BENEFÍCIOS ═══════════════════════════════ -->
+<section class="benefits-section">
+  <div class="container">
+    <div class="section-eyebrow">Resultados práticos</div>
+    <h2 class="section-title">O que muda no<br><em>dia a dia do seu salão</em></h2>
+
+    <div class="benefits-list">
+
+      <div class="benefit-row">
+        <div class="benefit-label">
+          <div class="benefit-label-icon">⏰</div>
+          <strong>Menos tempo no celular</strong>
+        </div>
+        <div class="benefit-desc">
+          Com a agenda online funcionando 24h, você para de responder mensagens para marcar horário e passa esse tempo com quem está na cadeira.
+        </div>
+      </div>
+
+      <div class="benefit-row">
+        <div class="benefit-label">
+          <div class="benefit-label-icon">📊</div>
+          <strong>Clareza financeira</strong>
+        </div>
+        <div class="benefit-desc">
+          Você sabe em tempo real quanto entrou, quanto saiu e qual foi o lucro do mês — sem esperar o contador ou preencher planilhas.
+        </div>
+      </div>
+
+      <div class="benefit-row">
+        <div class="benefit-label">
+          <div class="benefit-label-icon">💆‍♀️</div>
+          <strong>Equipe mais tranquila</strong>
+        </div>
+        <div class="benefit-desc">
+          Cada profissional sabe seus atendimentos do dia e vê sua comissão acumulando a cada serviço. Fim das discussões no fechamento.
+        </div>
+      </div>
+
+      <div class="benefit-row">
+        <div class="benefit-label">
+          <div class="benefit-label-icon">💅</div>
+          <strong>Clientes mais fidelizadas</strong>
+        </div>
+        <div class="benefit-desc">
+          Com histórico de alergias, preferências e alertas de inatividade, o atendimento fica personalizado — e clientes que se sentem lembradas voltam sempre.
+        </div>
+      </div>
+
+      <div class="benefit-row">
+        <div class="benefit-label">
+          <div class="benefit-label-icon">📈</div>
+          <strong>Decisões baseadas em dados</strong>
+        </div>
+        <div class="benefit-desc">
+          Saiba quais serviços geram mais receita, quais profissionais têm melhor taxa de conclusão e em qual período do mês você fatura mais.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ DIFERENCIAIS ═══════════════════════════════ -->
+<section class="diff-section">
+  <div class="container">
+    <div class="section-eyebrow">Por que o Éden Beauty</div>
+    <h2 class="section-title">Uma plataforma feita<br><em>para o universo da beleza</em></h2>
+
+    <div class="diff-grid">
+
+      <div class="diff-card">
+        <div class="diff-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <h3>Tudo integrado, nada duplicado</h3>
+          <p>Agenda, financeiro, comissões e relatórios se alimentam mutuamente. Você cadastra o atendimento uma vez e tudo atualiza automaticamente.</p>
+        </div>
+      </div>
+
+      <div class="diff-card">
+        <div class="diff-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+        </div>
+        <div>
+          <h3>Funciona no celular</h3>
+          <p>Interface totalmente responsiva. Consulte a agenda, registre transações e veja relatórios de qualquer lugar, do celular ou do computador.</p>
+        </div>
+      </div>
+
+      <div class="diff-card">
+        <div class="diff-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div>
+          <h3>Configuração em 8 minutos</h3>
+          <p>Cadastre o salão, configure os serviços e a equipe e o link de agendamento já está pronto para compartilhar. Sem treinamento técnico.</p>
+        </div>
+      </div>
+
+      <div class="diff-card">
+        <div class="diff-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>
+        <div>
+          <h3>Dados exclusivamente seus</h3>
+          <p>Cada salão tem seu espaço isolado. Suas clientes, seus agendamentos e seu financeiro nunca se misturam com outros estabelecimentos.</p>
+        </div>
+      </div>
+
+      <div class="diff-card">
+        <div class="diff-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
+        </div>
+        <div>
+          <h3>Cresce com o seu negócio</h3>
+          <p>Funciona para um profissional solo ou para uma equipe inteira. Adicione profissionais, serviços e clientes sem limite.</p>
+        </div>
+      </div>
+
+      <div class="diff-card">
+        <div class="diff-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <div>
+          <h3>Sem instalação, sempre atualizado</h3>
+          <p>Acesso pelo navegador, sem downloads. Todas as melhorias e novos recursos chegam automaticamente, sem você precisar fazer nada.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ CTA FINAL ═══════════════════════════════ -->
+<section class="cta-section">
+  <div class="container" style="position:relative;z-index:1">
+    <div class="section-eyebrow" style="justify-content:center">Próximo passo</div>
+    <h2 class="section-title">Pronta para transformar<br><em>a gestão do seu salão?</em></h2>
+    <p class="cta-lead">
+      Cadastre seu salão gratuitamente e veja em minutos como o Éden Beauty pode organizar sua agenda, seu financeiro e sua equipe.
+    </p>
+    <a href="/cadastro" class="cta-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      Criar minha conta grátis
+    </a>
+    <p class="cta-fine">Sem cartão de crédito &nbsp;·&nbsp; Configuração em 8 minutos &nbsp;·&nbsp; Suporte incluído</p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ FOOTER ═══════════════════════════════ -->
+<footer>
+  <div class="footer-logo">Éden Beauty</div>
+  <p>Gestão inteligente para salões e barbearias &nbsp;·&nbsp; 2025</p>
+</footer>
+
+</body>
+</html>
