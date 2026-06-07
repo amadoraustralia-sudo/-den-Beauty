@@ -38,7 +38,17 @@
       "Bash(echo \"EXIT:$?\")",
       "Bash(supabase --version)",
       "Bash(npm --version)",
-      "Bash(Get-Content *)"
+      "Bash(Get-Content *)",
+      "Bash(git pull *)",
+      "PowerShell(Get-MpPreference *)",
+      "PowerShell(Resolve-DnsName *)",
+      "PowerShell(Get-CimInstance *)",
+      "Bash(gh auth *)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('Name:', d.get\\('name'\\)\\); print\\('Full:', d.get\\('full_name'\\)\\); print\\('Default branch:', d.get\\('default_branch'\\)\\); print\\('Private:', d.get\\('private'\\)\\)\")",
+      "Bash(git credential *)",
+      "Bash(git checkout *)",
+      "Bash(Select-Object Name)",
+      "Bash(git rm *)"
     ]
   },
   "enableAllProjectMcpServers": true
