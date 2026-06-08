@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Eden Beauty — Sistema de Salão de Beleza
 
-## Getting Started
+Sistema de gestão para salões de beleza. Painel administrativo, portal do cliente, agendamentos e relatórios financeiros.
 
-First, run the development server:
+## Tecnologias
+
+- **Frontend:** Next.js (TypeScript)
+- **Backend / Banco:** Supabase (PostgreSQL)
+- **Estilização:** Tailwind CSS
+
+## Como começar
+
+### Pré-requisitos
+
+- Node.js 18+
+- Conta no Supabase (ou instância local)
+
+### Clonar e instalar
+
+```bash
+git clone https://github.com/amadoraustralia-sudo/-den-Beauty.git
+cd -den-Beauty
+npm install
+```
+
+### Configurar variáveis de ambiente
+
+Copie o arquivo de exemplo e preencha com suas credenciais do Supabase:
+
+```bash
+cp .env.example .env.local
+```
+
+Edite `.env.local`:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=sua_url_aqui
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_aqui
+```
+
+### Rodar localmente
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Fluxo de trabalho (Git)
 
-## Learn More
+### Branches
 
-To learn more about Next.js, take a look at the following resources:
+| Branch | Propósito |
+|--------|-----------|
+| `master` | Produção — merge somente via PR aprovado |
+| `develop` | Desenvolvimento — integração de features |
+| `feature/*` | Nova funcionalidade |
+| `fix/*` | Correção de bug |
+| `docs/*` | Atualização de documentação |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Convenção de nomes de branch
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+feature/nome-da-funcionalidade
+fix/descricao-do-bug
+docs/atualizacao-de-doc
+```
 
-## Deploy on Vercel
+### Formato de mensagem de commit
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+Descrição clara do que mudou
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Exemplos:
+- `Adiciona tela de agendamento para o cliente`
+- `Corrige erro ao salvar serviços duplicados`
+- `Atualiza README com instruções de instalação`
+
+### Criar e enviar uma feature
+
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feature/minha-funcionalidade
+
+# ... faça as alterações ...
+
+git add .
+git commit -m "Descrição do que foi feito"
+git push origin feature/minha-funcionalidade
+```
+
+Depois abra um Pull Request de `feature/minha-funcionalidade` → `develop` no GitHub.
+
+### Revisor padrão de PRs
+
+- **@amadoraustralia-sudo** e **@edenteam777-cloud** revisam mutuamente todos os PRs.
+
+---
+
+## Colaboradores
+
+- [@amadoraustralia-sudo](https://github.com/amadoraustralia-sudo)
+- [@edenteam777-cloud](https://github.com/edenteam777-cloud)

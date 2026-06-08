@@ -8,24 +8,30 @@ export default async function CancelarPage({ params }: { params: Promise<{ id: s
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/agendar/login");
 
-  const { data: cliente } = await supabase
-    .from("clientes")
-    .select("id")
-    .eq("email", user.email!)
-    .single();
+  // Resolve cliente por auth_user_id (preferencial) e cai para email
+  let clienteId: string | null = null;
+  const { data: c1 } = await supabase
+    .from("clientes").select("id").eq("auth_user_id", user.id).maybeSingle();
+  if (c1) clienteId = c1.id;
+  else if (user.email) {
+    const { data: c2 } = await supabase
+      .from("clientes").select("id").eq("email", user.email).maybeSingle();
+    if (c2) clienteId = c2.id;
+  }
+  if (!clienteId) redirect("/agendar/meus-agendamentos");
 
   const { data: agendamento } = await supabase
     .from("agendamentos")
     .select("*, servicos(nome, duracao_min), profissionais(nome)")
     .eq("id", id)
-    .eq("cliente_id", cliente?.id ?? "00000000-0000-0000-0000-000000000000")
-    .single();
+    .eq("cliente_id", clienteId)
+    .maybeSingle();
 
-  if (!agendamento) redirect("/minha-conta/agendamentos");
+  if (!agendamento) redirect("/agendar/meus-agendamentos");
   if (agendamento.status === "cancelado" || agendamento.status === "concluido") {
-    redirect("/minha-conta/agendamentos");
+    redirect("/agendar/meus-agendamentos");
   }
 
   const dataFmt = new Date(agendamento.data + "T12:00:00").toLocaleDateString("pt-BR", {
@@ -33,10 +39,10 @@ export default async function CancelarPage({ params }: { params: Promise<{ id: s
   });
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 lg:p-8 max-w-2xl mx-auto">
       <div>
         <Link
-          href="/minha-conta/agendamentos"
+          href="/agendar/meus-agendamentos"
           className="inline-flex items-center gap-1.5 text-sm mb-4"
           style={{ color: "var(--text-muted)" }}
         >
@@ -52,7 +58,7 @@ export default async function CancelarPage({ params }: { params: Promise<{ id: s
       </div>
 
       {/* Resumo do agendamento */}
-      <div className="card p-5">
+      <div className="card p-5 mt-6">
         <div className="flex items-start gap-4">
           <div
             className="flex-shrink-0 rounded-xl flex flex-col items-center justify-center"
@@ -79,7 +85,7 @@ export default async function CancelarPage({ params }: { params: Promise<{ id: s
 
       {/* Aviso */}
       <div
-        className="rounded-xl p-4 flex gap-3"
+        className="rounded-xl p-4 flex gap-3 mt-6"
         style={{ background: "var(--danger-bg, #fff5f5)", border: "1px solid var(--danger-border, #fecaca)" }}
       >
         <svg className="flex-shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -91,7 +97,7 @@ export default async function CancelarPage({ params }: { params: Promise<{ id: s
       </div>
 
       {/* Ações */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 mt-6">
         <form action={cancelarAgendamento}>
           <input type="hidden" name="id" value={id} />
           <button
@@ -103,7 +109,7 @@ export default async function CancelarPage({ params }: { params: Promise<{ id: s
           </button>
         </form>
         <Link
-          href="/minha-conta/agendamentos"
+          href="/agendar/meus-agendamentos"
           className="btn w-full text-center"
           style={{ padding: "0.75rem" }}
         >
