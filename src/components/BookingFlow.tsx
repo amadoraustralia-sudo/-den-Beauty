@@ -17,6 +17,9 @@ interface Props {
   salaoId?: string | null;
   diasFuncionamento?: string[] | null;
   successRedirect?: string;
+  // M1: rotas do portal configuráveis (default = portal /agendar)
+  loginHref?: string;
+  cadastroHref?: string;
 }
 
 type Step = "servico" | "profissional" | "data" | "hora" | "confirmar" | "sucesso";
@@ -44,8 +47,12 @@ const STEP_LABELS: Record<Step, string> = {
 
 const DAY_KEYS = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
 
-export default function BookingFlow({ servicos, profissionais, clienteId, clienteNome, isLogado, salaoId, diasFuncionamento, successRedirect }: Props) {
+export default function BookingFlow({ servicos, profissionais, clienteId, clienteNome, isLogado, salaoId, diasFuncionamento, successRedirect, loginHref, cadastroHref }: Props) {
   const router = useRouter();
+  // M1: defaults apontam para o portal /agendar/*
+  const LOGIN_HREF = loginHref ?? "/agendar/login";
+  const CADASTRO_HREF = cadastroHref ?? "/agendar/cadastro";
+  const SUCCESS_HREF = successRedirect ?? "/agendar/meus-agendamentos";
   const [step, setStep] = useState<Step>("servico");
   const [servico, setServico] = useState<Servico | null>(null);
   const [servicosAdicionais, setServicosAdicionais] = useState<Servico[]>([]);
@@ -125,7 +132,7 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
     setErro("");
 
     if (!isLogado) {
-      router.push(`/login`);
+      router.push(LOGIN_HREF); // M1: era "/login"
       return;
     }
 
@@ -187,8 +194,9 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
           >
             Novo agendamento
           </button>
-          <a href={successRedirect ?? "/minha-conta"} className="btn btn-primary">
-            {successRedirect ? "Ver agendamentos" : "Minha conta"}
+          {/* M1: default era "/minha-conta" */}
+          <a href={SUCCESS_HREF} className="btn btn-primary">
+            Ver agendamentos
           </a>
         </div>
       </div>
@@ -543,7 +551,7 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
 
           {!isLogado && (
             <div className="px-4 py-3 rounded-xl text-sm" style={{ background: "var(--info-bg)", border: "1px solid #BFDBFE", color: "var(--info)" }}>
-              <strong>Faça login</strong> ou <a href="/cadastro" style={{ color: "var(--info)", fontWeight: 600 }}>crie uma conta</a> para confirmar o agendamento. É rápido e gratuito.
+              <strong>Faça login</strong> ou <a href={CADASTRO_HREF} style={{ color: "var(--info)", fontWeight: 600 }}>crie uma conta</a> para confirmar o agendamento. É rápido e gratuito.
             </div>
           )}
 

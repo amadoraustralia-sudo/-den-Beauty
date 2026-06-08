@@ -71,7 +71,7 @@ function AgCard({ a, showCancel, showRepeat }: { a: Agendamento; showCancel: boo
           )}
           {showCancel && (
             <Link
-              href={`/minha-conta/agendamentos/${a.id}/cancelar`}
+              href={`/agendar/meus-agendamentos/${a.id}/cancelar`}
               className="flex-1 text-center px-3 py-2 rounded-lg text-xs font-medium transition-colors"
               style={{ border: "1px solid var(--danger)", color: "var(--danger)", background: "var(--danger-bg)" }}
             >
@@ -95,12 +95,12 @@ export default async function MeusAgendamentosPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  // Resolve cliente
+  // Resolve cliente (auth_user_id preferencial, fallback email)
   let clienteId = "00000000-0000-0000-0000-000000000000";
-  const { data: c1 } = await supabase.from("clientes").select("id").eq("auth_user_id", user.id).single();
+  const { data: c1 } = await supabase.from("clientes").select("id").eq("auth_user_id", user.id).maybeSingle();
   if (c1) { clienteId = c1.id; }
   else if (user.email) {
-    const { data: c2 } = await supabase.from("clientes").select("id").eq("email", user.email).single();
+    const { data: c2 } = await supabase.from("clientes").select("id").eq("email", user.email).maybeSingle();
     if (c2) clienteId = c2.id;
   }
 
