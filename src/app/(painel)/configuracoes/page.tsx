@@ -1,6 +1,7 @@
 import Topbar from "@/components/Topbar";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getSalon } from "@/lib/supabase/salon";
 import { salvarConfiguracoes } from "./actions";
 import UnsavedChangesGuard from "@/components/UnsavedChangesGuard";
 import CopyLinkButton from "@/components/CopyLinkButton";
@@ -25,10 +26,8 @@ export default async function ConfiguracoesPage({
   const { erro } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: config }, { data: profissionais }] = await Promise.all([
-    supabase.from("configuracoes")
-      .select("id, nome_estabelecimento, slug, telefone, email, endereco, horario_abertura, horario_fechamento, dias_funcionamento, horarios_semana, intervalo_agendamento, antecedencia_minima_horas, cancelamento_horas, logo_url")
-      .limit(1).single(),
+  const [config, { data: profissionais }] = await Promise.all([
+    getSalon(),
     supabase.from("profissionais")
       .select("id, nome, cargo, email, ativo")
       .order("nome"),
@@ -166,7 +165,7 @@ export default async function ConfiguracoesPage({
             {/* Coluna lateral */}
             <div className="space-y-5">
               {/* Horário por dia */}
-              <div className="card overflow-hidden">
+              <div className="card" style={{ overflow: "visible" }}>
                 <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
                   <h3>Horário de funcionamento</h3>
                   <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>Configure por dia da semana</p>

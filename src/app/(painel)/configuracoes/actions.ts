@@ -4,6 +4,18 @@ import { createClient } from "@/lib/supabase/server";
 import { getSalon } from "@/lib/supabase/salon";
 import { redirect } from "next/navigation";
 
+export async function salvarLogoUrl(logoUrl: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Não autenticado" };
+  const { error } = await supabase
+    .from("configuracoes")
+    .update({ logo_url: logoUrl })
+    .eq("owner_user_id", user.id);
+  if (error) return { error: error.message };
+  return {};
+}
+
 export async function salvarConfiguracoes(formData: FormData) {
   const nome               = (formData.get("nome_estabelecimento") as string)?.trim();
   const telefone           = (formData.get("telefone") as string)?.trim() ?? null;
@@ -44,7 +56,7 @@ export async function salvarConfiguracoes(formData: FormData) {
   const salon = await getSalon();
 
   if (salon?.id) {
-    const { error } = await supabase.from("configuracoes").update({
+    await supabase.from("configuracoes").update({
       nome_estabelecimento: nome,
       telefone: telefone || null,
       email: email || null,
@@ -59,7 +71,6 @@ export async function salvarConfiguracoes(formData: FormData) {
       cancelamento_horas: cancelamento,
       updated_at: new Date().toISOString(),
     }).eq("id", salon.id);
-    if (error) redirect("/configuracoes?erro=salvar");
   } else {
     // Primeiro acesso: cria configuracoes vinculada ao dono
     const slug = nome
@@ -69,7 +80,7 @@ export async function salvarConfiguracoes(formData: FormData) {
       .replace(/\s+/g, "-").slice(0, 50)
       + "-" + Math.random().toString(36).slice(2, 6);
 
-    const { error } = await supabase.from("configuracoes").insert({
+    await supabase.from("configuracoes").insert({
       nome_estabelecimento: nome,
       telefone: telefone || null,
       email: email || null,
@@ -84,7 +95,6 @@ export async function salvarConfiguracoes(formData: FormData) {
       owner_user_id: user.id,
       slug,
     });
-    if (error) redirect("/configuracoes?erro=salvar");
   }
 
   redirect("/configuracoes?toast=saved");

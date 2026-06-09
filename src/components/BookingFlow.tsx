@@ -17,6 +17,9 @@ interface Props {
   salaoId?: string | null;
   diasFuncionamento?: string[] | null;
   successRedirect?: string;
+  // M1: rotas do portal configuráveis (default = portal /agendar)
+  loginHref?: string;
+  cadastroHref?: string;
 }
 
 type Step = "servico" | "profissional" | "data" | "hora" | "confirmar" | "sucesso";
@@ -44,10 +47,15 @@ const STEP_LABELS: Record<Step, string> = {
 
 const DAY_KEYS = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
 
-export default function BookingFlow({ servicos, profissionais, clienteId, clienteNome, isLogado, salaoId, diasFuncionamento, successRedirect }: Props) {
+export default function BookingFlow({ servicos, profissionais, clienteId, clienteNome, isLogado, salaoId, diasFuncionamento, successRedirect, loginHref, cadastroHref }: Props) {
   const router = useRouter();
+  // M1: defaults apontam para o portal /agendar/*
+  const LOGIN_HREF = loginHref ?? "/agendar/login";
+  const CADASTRO_HREF = cadastroHref ?? "/agendar/cadastro";
+  const SUCCESS_HREF = successRedirect ?? "/agendar/meus-agendamentos";
   const [step, setStep] = useState<Step>("servico");
   const [servico, setServico] = useState<Servico | null>(null);
+  const [servicosAdicionais, setServicosAdicionais] = useState<Servico[]>([]);
   const [profissional, setProfissional] = useState<Profissional | null>(null);
   const [qualquerProf, setQualquerProf] = useState(false);
   const [data, setData] = useState("");
@@ -57,17 +65,27 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
   const [isPending, startTransition] = useTransition();
   const [erro, setErro] = useState("");
 
+  const duracaoTotal = (servico?.duracao_min ?? 0) + servicosAdicionais.reduce((acc, s) => acc + s.duracao_min, 0);
+  const precoTotal = (servico?.preco ?? 0) + servicosAdicionais.reduce((acc, s) => acc + s.preco, 0);
+
+  // Serviços disponíveis para adicionar
+  const servicosDisponiveis = servicos.filter(
+    (s) => s.id !== servico?.id && !servicosAdicionais.find((a) => a.id === s.id)
+  );
+
   // Categorias dos serviços
   const categorias = [...new Set(servicos.map((s) => s.categoria))];
 
-  // Datas disponíveis (próximos 30 dias, filtrado por diasFuncionamento)
+  function toLocalDateStr(d: Date) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
   const hoje = new Date();
   const diasAtivos = diasFuncionamento ?? ["seg", "ter", "qua", "qui", "sex", "sab"];
   const datas: string[] = [];
-  for (let i = 1; i <= 30; i++) {
+  for (let i = 0; i <= 29; i++) {
     const d = new Date(hoje); d.setDate(hoje.getDate() + i);
     if (diasAtivos.includes(DAY_KEYS[d.getDay()])) {
-      datas.push(d.toISOString().split("T")[0]);
+      datas.push(toLocalDateStr(d));
     }
   }
 
@@ -81,9 +99,32 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
       p_servico_id: servico.id,
       p_profissional_id: (!qualquerProf && profissional) ? profissional.id : null,
       p_salao_id: salaoId ?? null,
+      p_duracao_total: duracaoTotal > 0 ? duracaoTotal : null,
     });
     setSlots(resultado?.filter((s: Slot) => s.disponivel) ?? []);
     setLoadingSlots(false);
+  }
+
+  function selecionarServicoPrincipal(s: Servico) {
+    setServico(s);
+    setServicosAdicionais([]);
+    setSlot(null);
+    setSlots([]);
+  }
+
+  function adicionarServicoAdicional(servicoId: string) {
+    if (!servicoId) return;
+    const svc = servicos.find((s) => s.id === servicoId);
+    if (!svc) return;
+    setServicosAdicionais((prev) => [...prev, svc]);
+    setSlot(null);
+    setSlots([]);
+  }
+
+  function removerServicoAdicional(idx: number) {
+    setServicosAdicionais((prev) => prev.filter((_, i) => i !== idx));
+    setSlot(null);
+    setSlots([]);
   }
 
   async function confirmar() {
@@ -91,7 +132,7 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
     setErro("");
 
     if (!isLogado) {
-      router.push(`/login`);
+      router.push(LOGIN_HREF); // M1: era "/login"
       return;
     }
 
@@ -108,10 +149,11 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
         profissional_id: slot.profissional_id,
         data,
         hora: slot.hora,
-        valor: servico.preco,
+        valor: precoTotal,
         status: "aguardando",
         origem: "portal_cliente",
         salao_id: salaoId ?? null,
+        servicos_adicionais: servicosAdicionais.map((s) => ({ id: s.id, nome: s.nome, preco: s.preco, duracao_min: s.duracao_min })),
       });
 
       if (error) {
@@ -123,10 +165,10 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
     });
   }
 
-  // Progresso
   const stepIdx = STEPS.indexOf(step);
 
   if (step === "sucesso") {
+    const nomesServicos = [servico?.nome, ...servicosAdicionais.map((s) => s.nome)].filter(Boolean).join(" + ");
     return (
       <div className="card p-8 text-center">
         <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "var(--brand-100)" }}>
@@ -136,23 +178,25 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
         </div>
         <h2 className="mb-2">Agendamento solicitado!</h2>
         <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>
-          <strong style={{ color: "var(--text-primary)" }}>{servico?.nome}</strong> com <strong style={{ color: "var(--text-primary)" }}>{slot?.profissional_nome}</strong>
+          <strong style={{ color: "var(--text-primary)" }}>{nomesServicos}</strong> com <strong style={{ color: "var(--text-primary)" }}>{slot?.profissional_nome}</strong>
         </p>
-        <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
+        <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>
           {new Date(data + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })} às {slot?.hora.slice(0, 5)}
         </p>
+        <p className="text-sm mb-6 font-semibold" style={{ color: "var(--brand-700)" }}>{formatPreco(precoTotal)}</p>
         <p className="text-xs mb-6 px-4 py-3 rounded-lg" style={{ background: "var(--warning-bg)", color: "var(--warning)" }}>
           Aguardando confirmação do salão. Você receberá uma notificação em breve.
         </p>
         <div className="flex gap-3 justify-center">
           <button
-            onClick={() => { setStep("servico"); setServico(null); setProfissional(null); setData(""); setSlot(null); }}
+            onClick={() => { setStep("servico"); setServico(null); setServicosAdicionais([]); setProfissional(null); setData(""); setSlot(null); }}
             className="btn btn-secondary"
           >
             Novo agendamento
           </button>
-          <a href={successRedirect ?? "/minha-conta"} className="btn btn-primary">
-            {successRedirect ? "Ver agendamentos" : "Minha conta"}
+          {/* M1: default era "/minha-conta" */}
+          <a href={SUCCESS_HREF} className="btn btn-primary">
+            Ver agendamentos
           </a>
         </div>
       </div>
@@ -202,7 +246,7 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
         <div className="flex flex-wrap gap-2">
           {servico && (
             <button onClick={() => setStep("servico")} className="badge badge-green" style={{ cursor: "pointer", padding: "0.35rem 0.65rem" }}>
-              ✂️ {servico.nome} · {formatPreco(servico.preco)}
+              ✂️ {servico.nome}{servicosAdicionais.length > 0 ? ` +${servicosAdicionais.length}` : ""} · {formatPreco(precoTotal)}
             </button>
           )}
           {(profissional || qualquerProf) && step !== "profissional" && (
@@ -226,14 +270,92 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
       {/* STEP: Serviço */}
       {step === "servico" && (
         <div className="space-y-4">
-          {categorias.map((cat) => (
+          {/* Serviços selecionados */}
+          {servico && (
+            <div className="card p-4 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Serviços selecionados</p>
+
+              {/* Principal */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{servico.nome}</p>
+                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>{formatDuracao(servico.duracao_min)} · {formatPreco(servico.preco)}</p>
+                </div>
+                <button
+                  onClick={() => { setServico(null); setServicosAdicionais([]); }}
+                  className="text-xs px-2 py-1 rounded"
+                  style={{ background: "var(--bg-subtle)", color: "var(--text-muted)", border: "none", cursor: "pointer" }}
+                >
+                  Trocar
+                </button>
+              </div>
+
+              {/* Adicionais */}
+              {servicosAdicionais.map((s, i) => (
+                <div key={s.id} className="flex items-center justify-between pl-3" style={{ borderLeft: "2px solid var(--brand-200)" }}>
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{s.nome}</p>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>{formatDuracao(s.duracao_min)} · {formatPreco(s.preco)}</p>
+                  </div>
+                  <button
+                    onClick={() => removerServicoAdicional(i)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "1.1rem", lineHeight: 1 }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+
+              {/* Total */}
+              {servicosAdicionais.length > 0 && (
+                <div className="pt-2 flex justify-between" style={{ borderTop: "1px solid var(--border)" }}>
+                  <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Total</span>
+                  <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>{formatDuracao(duracaoTotal)} · {formatPreco(precoTotal)}</span>
+                </div>
+              )}
+
+              {/* Adicionar mais */}
+              {servicosDisponiveis.length > 0 && (
+                <select
+                  className="input select w-full"
+                  style={{ fontSize: "0.8125rem" }}
+                  value=""
+                  onChange={(e) => adicionarServicoAdicional(e.target.value)}
+                >
+                  <option value="">+ Adicionar outro serviço</option>
+                  {servicosDisponiveis.map((s) => (
+                    <option key={s.id} value={s.id}>{s.nome} — {formatDuracao(s.duracao_min)} · {formatPreco(s.preco)}</option>
+                  ))}
+                </select>
+              )}
+
+              <button
+                onClick={() => setStep("profissional")}
+                className="btn btn-primary w-full"
+              >
+                Continuar
+              </button>
+            </div>
+          )}
+
+          {/* Lista de serviços para escolher */}
+          {!servico && categorias.length === 0 && (
+            <div className="card p-8 text-center">
+              <div className="text-3xl mb-3">🔍</div>
+              <p className="font-medium mb-1" style={{ color: "var(--text-primary)" }}>Nenhum serviço disponível</p>
+              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                Não conseguimos carregar os serviços do salão. Entre em contato para agendar.
+              </p>
+            </div>
+          )}
+          {!servico && categorias.map((cat) => (
             <div key={cat}>
               <p className="text-xs font-semibold uppercase tracking-wider mb-2 px-1" style={{ color: "var(--text-muted)" }}>{cat}</p>
               <div className="card overflow-hidden">
                 {servicos.filter((s) => s.categoria === cat).map((s, i, arr) => (
                   <button
                     key={s.id}
-                    onClick={() => { setServico(s); setStep("profissional"); }}
+                    onClick={() => selecionarServicoPrincipal(s)}
                     className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[var(--bg-subtle)]"
                     style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}
                   >
@@ -330,9 +452,14 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
       {/* STEP: Horário */}
       {step === "hora" && (
         <div className="card p-5">
-          <p className="text-sm font-medium mb-4" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-sm font-medium mb-1" style={{ color: "var(--text-secondary)" }}>
             Horários disponíveis em {new Date(data + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
           </p>
+          {duracaoTotal > 0 && (
+            <p className="text-xs mb-4" style={{ color: "var(--text-muted)" }}>
+              Duração total: <strong>{formatDuracao(duracaoTotal)}</strong>
+            </p>
+          )}
 
           {loadingSlots ? (
             <div className="flex items-center justify-center py-8 gap-2" style={{ color: "var(--text-muted)" }}>
@@ -350,7 +477,6 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
             </div>
           ) : (
             <>
-              {/* Agrupa por profissional se for qualquer um */}
               {qualquerProf ? (
                 [...new Set(slots.map((s) => s.profissional_nome))].map((nome) => (
                   <div key={nome} className="mb-4">
@@ -394,10 +520,22 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
           <div className="card p-5 space-y-4">
             <h3>Resumo do agendamento</h3>
 
+            {/* Serviços */}
+            <div className="flex items-start justify-between gap-4">
+              <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                {servicosAdicionais.length > 0 ? "Serviços" : "Serviço"}
+              </span>
+              <div className="text-right">
+                <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{servico.nome}</p>
+                {servicosAdicionais.map((s) => (
+                  <p key={s.id} className="text-sm" style={{ color: "var(--text-secondary)" }}>+ {s.nome}</p>
+                ))}
+              </div>
+            </div>
+
             {[
-              { label: "Serviço", value: servico.nome },
-              { label: "Duração", value: formatDuracao(servico.duracao_min) },
-              { label: "Valor", value: formatPreco(servico.preco) },
+              { label: "Duração total", value: formatDuracao(duracaoTotal) },
+              { label: "Valor total", value: formatPreco(precoTotal) },
               { label: "Profissional", value: slot.profissional_nome },
               {
                 label: "Data e hora",
@@ -413,7 +551,7 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
 
           {!isLogado && (
             <div className="px-4 py-3 rounded-xl text-sm" style={{ background: "var(--info-bg)", border: "1px solid #BFDBFE", color: "var(--info)" }}>
-              <strong>Faça login</strong> ou <a href="/cadastro" style={{ color: "var(--info)", fontWeight: 600 }}>crie uma conta</a> para confirmar o agendamento. É rápido e gratuito.
+              <strong>Faça login</strong> ou <a href={CADASTRO_HREF} style={{ color: "var(--info)", fontWeight: 600 }}>crie uma conta</a> para confirmar o agendamento. É rápido e gratuito.
             </div>
           )}
 

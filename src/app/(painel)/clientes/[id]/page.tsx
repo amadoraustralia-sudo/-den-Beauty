@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { getSalaoId } from "@/lib/supabase/salon";
 import Topbar from "@/components/Topbar";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -18,7 +17,6 @@ const statusBadge: Record<string, string> = {
 export default async function FichaClientePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const salao_id = await getSalaoId();
 
   const [{ data: cliente }, { data: historico }] = await Promise.all([
     supabase
@@ -26,16 +24,13 @@ export default async function FichaClientePage({ params }: { params: Promise<{ i
       .select("*, profissionais(nome)")
       .eq("id", id)
       .single(),
-    salao_id
-      ? supabase
-          .from("agendamentos")
-          .select("*, servicos(nome, preco), profissionais(nome)")
-          .eq("cliente_id", id)
-          .eq("salao_id", salao_id)
-          .order("data", { ascending: false })
-          .order("hora", { ascending: false })
-          .limit(20)
-      : Promise.resolve({ data: [] }),
+    supabase
+      .from("agendamentos")
+      .select("*, servicos(nome, preco), profissionais(nome)")
+      .eq("cliente_id", id)
+      .order("data", { ascending: false })
+      .order("hora", { ascending: false })
+      .limit(20),
   ]);
 
   if (!cliente) notFound();

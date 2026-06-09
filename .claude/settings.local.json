@@ -20,7 +20,36 @@
       "mcp__claude_ai_Supabase__list_tables",
       "Bash(node scripts/fix-studio-reis.mjs)",
       "Bash(node -e ' *)",
-      "Bash(npx supabase *)"
+      "Bash(npx supabase *)",
+      "mcp__claude_ai_Supabase__list_migrations",
+      "PowerShell(cd \"C:\\\\Users\\\\Juju suga quente\\\\OneDrive\\\\Salão de beleza sistema\"; git diff HEAD -- src/components/LogoUpload.tsx src/components/Sidebar.tsx \"src/app/\\(painel\\)/layout.tsx\")",
+      "PowerShell(cd \"C:\\\\Users\\\\Juju suga quente\\\\OneDrive\\\\Salão de beleza sistema\"; git diff HEAD -- \"src/app/\\(painel\\)/configuracoes/actions.ts\" src/components/BookingFlow.tsx)",
+      "PowerShell(cd \"C:\\\\Users\\\\Juju suga quente\\\\OneDrive\\\\Salão de beleza sistema\"; git diff HEAD -- \"src/app/\\(painel\\)/configuracoes/page.tsx\")",
+      "Bash(python3 -c ' *)",
+      "Bash(node *)",
+      "Bash(Get-ChildItem -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Skill(update-config)",
+      "Bash(gh repo *)",
+      "WebFetch(domain:github.com)",
+      "Bash(findstr \"\\\\\"next\\\\\"\")",
+      "Read(//c/Users/Juju suga quente/OneDrive/**)",
+      "Bash(npx create-next-app@16 eden-mind --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --yes)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(supabase --version)",
+      "Bash(npm --version)",
+      "Bash(Get-Content *)",
+      "Bash(git pull *)",
+      "PowerShell(Get-MpPreference *)",
+      "PowerShell(Resolve-DnsName *)",
+      "PowerShell(Get-CimInstance *)",
+      "Bash(gh auth *)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('Name:', d.get\\('name'\\)\\); print\\('Full:', d.get\\('full_name'\\)\\); print\\('Default branch:', d.get\\('default_branch'\\)\\); print\\('Private:', d.get\\('private'\\)\\)\")",
+      "Bash(git credential *)",
+      "Bash(git checkout *)",
+      "Bash(Select-Object Name)",
+      "Bash(git rm *)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true
 }

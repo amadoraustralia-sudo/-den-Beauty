@@ -42,7 +42,7 @@ export default async function FinanceiroPage({
     .order("created_at", { ascending: false });
 
   const receita  = transacoes?.filter((t) => t.tipo === "entrada").reduce((a, t) => a + Number(t.valor), 0) ?? 0;
-  const despesas = transacoes?.filter((t) => t.tipo === "saida").reduce((a, t) => a + Number(t.valor), 0) ?? 0;
+  const despesas = transacoes?.filter((t) => t.tipo !== "entrada").reduce((a, t) => a + Number(t.valor), 0) ?? 0;
   const lucro    = receita - despesas;
   const entradas = transacoes?.filter((t) => t.tipo === "entrada") ?? [];
   const ticketMedio = entradas.length > 0 ? receita / entradas.length : 0;

@@ -23,7 +23,8 @@ export default function CadastroPortalPage() {
     if (!form.nome.trim())         e.nome = "Obrigatório";
     if (!form.email.trim())        e.email = "Obrigatório";
     if (!form.telefone.trim())     e.telefone = "Obrigatório";
-    if (!form.password) e.password = "Obrigatório";
+    if (!form.password)            e.password = "Obrigatório";
+    if (form.password.length > 0 && form.password.length < 6) e.password = "Mínimo de 6 caracteres";
     if (form.password !== form.confirm) e.confirm = "Senhas não coincidem";
     if (!aceite)                   e.aceite = "Aceite os termos para continuar";
     setErros(e);
@@ -39,11 +40,17 @@ export default function CadastroPortalPage() {
     const supabase = createClient();
 
     // 1. Criar conta no Supabase Auth
+    //    Enviamos role e salao_id nos metadados para o trigger handle_new_user.
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
-      email: form.email,
+      email: form.email.trim(),
       password: form.password,
       options: {
-        data: { nome: form.nome, telefone: form.telefone },
+        data: {
+          nome: form.nome.trim(),
+          telefone: form.telefone.trim(),
+          role: "cliente",
+          salao_id: process.env.NEXT_PUBLIC_SALAO_ID ?? null,
+        },
       },
     });
 
@@ -57,15 +64,30 @@ export default function CadastroPortalPage() {
       return;
     }
 
-    // 2. Criar/vincular registro na tabela clientes via função SECURITY DEFINER
-    // (garante salao_id correto e funciona mesmo sem sessão ativa)
-    await supabase.rpc("register_portal_client", {
+    // 2. Criar/vincular registro em `clientes` via função SECURITY DEFINER.
+    //    M3: agora checamos o erro retornado (antes era ignorado).
+    const { error: rpcError } = await supabase.rpc("register_portal_client", {
       p_nome: form.nome.trim(),
       p_email: form.email.trim(),
       p_telefone: form.telefone.trim(),
       p_salao_id: process.env.NEXT_PUBLIC_SALAO_ID ?? null,
     });
 
+    if (rpcError) {
+      setError("Sua conta foi criada, mas houve um problema ao concluir o cadastro do perfil. Tente fazer login; se persistir, contate o salão.");
+      setLoading(false);
+      return;
+    }
+
+    // 3. M3: se a confirmação de e-mail estiver ativada no Supabase, o signUp
+    //    NÃO retorna sessão. Nesse caso não dá para entrar na área logada ainda
+    //    (e o auth_user_id do cliente só será vinculado após o 1º login).
+    if (!authData.session) {
+      router.push("/agendar/login?aviso=confirme-email");
+      return;
+    }
+
+    // 4. Sessão ativa: cadastro completo e vinculado.
     router.push("/agendar/inicio?toast=bemvindo");
     router.refresh();
   }

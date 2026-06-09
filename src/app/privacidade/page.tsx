@@ -8,9 +8,9 @@ export default function PrivacidadePage() {
       <div className="max-w-2xl mx-auto px-6 py-12">
         <div className="flex items-center gap-2.5 mb-10">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--brand-800)" }}>
-            <span className="text-xs font-bold text-white">EB</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
           </div>
-          <span className="font-bold text-sm tracking-wide" style={{ color: "var(--text-primary)" }}>Éden Beauty</span>
+          <span className="font-bold text-sm tracking-wide" style={{ color: "var(--text-primary)" }}>Sistema de Agendamento</span>
         </div>
 
         <h1 className="mb-2" style={{ fontSize: "1.75rem" }}>Política de Privacidade</h1>
@@ -19,7 +19,7 @@ export default function PrivacidadePage() {
         <div className="space-y-8 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
           <section>
             <h2 className="font-semibold mb-3" style={{ color: "var(--text-primary)", fontSize: "1rem" }}>1. Introdução</h2>
-            <p>A presente Política de Privacidade descreve como o Éden Beauty coleta, utiliza, armazena e protege as informações pessoais dos usuários, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).</p>
+            <p>A presente Política de Privacidade descreve como o este sistema de agendamento coleta, utiliza, armazena e protege as informações pessoais dos usuários, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).</p>
           </section>
 
           <section>
@@ -98,7 +98,7 @@ export default function PrivacidadePage() {
 
         <div className="mt-12 pt-8 flex gap-4" style={{ borderTop: "1px solid var(--border)" }}>
           <Link href="/termos" style={{ color: "var(--brand-600)", fontSize: "0.875rem" }}>Termos de Uso</Link>
-          <Link href="/cadastro" style={{ color: "var(--text-muted)", fontSize: "0.875rem" }}>Voltar ao cadastro</Link>
+          <a href="javascript:history.back()" style={{ color: "var(--text-muted)", fontSize: "0.875rem", cursor: "pointer" }}>← Voltar</a>
         </div>
       </div>
     </div>

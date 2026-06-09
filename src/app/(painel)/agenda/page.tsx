@@ -28,10 +28,15 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
   const prevWeek = new Date(monday + "T12:00:00"); prevWeek.setDate(prevWeek.getDate() - 7);
   const nextWeek = new Date(monday + "T12:00:00"); nextWeek.setDate(nextWeek.getDate() + 7);
 
-  const [{ data: agendamentos }, { data: profissionais }] = await Promise.all([
+  const [
+    { data: agendamentos },
+    { data: profissionais },
+    { data: config },
+    { data: bloqueios },
+  ] = await Promise.all([
     supabase
       .from("agendamentos")
-      .select("*, clientes(nome), servicos(nome, duracao_min), profissionais(nome)")
+      .select("*, clientes(nome), servicos(nome, duracao_min), profissionais(nome), servicos_adicionais")
       .gte("data", monday)
       .lte("data", sundayStr)
       .order("hora"),
@@ -40,6 +45,16 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
       .select("id, nome")
       .eq("ativo", true)
       .order("nome"),
+    supabase
+      .from("configuracoes")
+      .select("horarios_semana, horario_abertura, horario_fechamento, intervalo_agendamento")
+      .limit(1)
+      .single(),
+    supabase
+      .from("horarios_bloqueados")
+      .select("id, profissional_id, data, hora_inicio, hora_fim, motivo")
+      .gte("data", monday)
+      .lte("data", sundayStr),
   ]);
 
   const fmtData = new Date(hoje + "T12:00:00").toLocaleDateString("pt-BR", {
@@ -96,6 +111,11 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
             nextWeekDate={nextWeek.toISOString().split("T")[0]}
             prevDayDate={prev.toISOString().split("T")[0]}
             nextDayDate={next.toISOString().split("T")[0]}
+            horariosSemana={(config as any)?.horarios_semana ?? null}
+            horarioAbertura={config?.horario_abertura ?? null}
+            horarioFechamento={config?.horario_fechamento ?? null}
+            intervaloAgendamento={config?.intervalo_agendamento ?? 30}
+            bloqueios={bloqueios ?? []}
           />
         </div>
       </div>

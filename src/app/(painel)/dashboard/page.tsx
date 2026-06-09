@@ -6,10 +6,6 @@ import { redirect } from "next/navigation";
 import ClienteLinkCard from "@/components/ClienteLinkCard";
 import { RevenueChartClient, PaymentPieChartClient, TopServicosChartClient } from "@/components/charts/DashboardCharts";
 
-function isEntrada(tipo: string) {
-  return ["entrada", "receita"].includes((tipo ?? "").toLowerCase());
-}
-
 const statusBadge: Record<string, string> = {
   confirmado: "badge badge-green",
   aguardando:  "badge badge-yellow",
@@ -80,7 +76,7 @@ export default async function DashboardPage() {
       .gte("data", semana.start).lte("data", semana.end),
     supabase.from("clientes")
       .select("id").eq("salao_id", salao_id)
-      .lt("ultima_visita", new Date(Date.now() - 45 * 86400000).toISOString().split("T")[0]),
+      .lt("ultima_visita", new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0]),
     supabase.from("agendamentos")
       .select("forma_pagamento, valor").eq("salao_id", salao_id)
       .gte("data", `${mesAtual}-01`)
@@ -88,12 +84,11 @@ export default async function DashboardPage() {
   ]);
 
   // Métricas
-  const receitaMes = transacoesMes?.filter((t) => isEntrada(t.tipo)).reduce((a, t) => a + Number(t.valor), 0) ?? 0;
-  const receitaSemana = transacoesSemana?.filter((t) => isEntrada(t.tipo)).reduce((a, t) => a + Number(t.valor), 0) ?? 0;
+  const receitaMes = transacoesMes?.filter((t) => t.tipo === "entrada").reduce((a, t) => a + Number(t.valor), 0) ?? 0;
+  const receitaSemana = transacoesSemana?.filter((t) => t.tipo === "entrada").reduce((a, t) => a + Number(t.valor), 0) ?? 0;
   const hoje_count = agendamentosHoje?.length ?? 0;
   const concluidos = agendamentosHoje?.filter((a) => a.status === "concluido").length ?? 0;
-  const semanaCount = agendamentosSemana?.length ?? 0;
-  const ticketMedio = semanaCount > 0 ? receitaSemana / semanaCount : 0;
+  const ticketMedio = hoje_count > 0 ? receitaSemana / (agendamentosSemana?.length || 1) : 0;
 
   // Gráfico de faturamento semanal
   const diasSemana = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -104,9 +99,9 @@ export default async function DashboardPage() {
       .toISOString().split("T")[0];
     return {
       dia,
-      receita: transacoesSemana?.filter((t) => t.data === dateStr && isEntrada(t.tipo))
+      receita: transacoesSemana?.filter((t) => t.data === dateStr && t.tipo === "entrada")
         .reduce((a, t) => a + Number(t.valor), 0) ?? 0,
-      semanaAnterior: transacoesAnterior?.filter((t) => t.data === dateStrAnt && isEntrada(t.tipo))
+      semanaAnterior: transacoesAnterior?.filter((t) => t.data === dateStrAnt && t.tipo === "entrada")
         .reduce((a, t) => a + Number(t.valor), 0) ?? 0,
     };
   });
@@ -154,7 +149,7 @@ export default async function DashboardPage() {
     : [{ name: "Sem dados", value: 100, color: "var(--border)" }];
 
   // Badge de variação semanal
-  const receitaAnterior = transacoesAnterior?.filter((t) => isEntrada(t.tipo)).reduce((a, t) => a + Number(t.valor), 0) ?? 0;
+  const receitaAnterior = transacoesAnterior?.filter((t) => t.tipo === "entrada").reduce((a, t) => a + Number(t.valor), 0) ?? 0;
   const variacaoSemanal = receitaAnterior > 0
     ? Math.round(((receitaSemana - receitaAnterior) / receitaAnterior) * 100)
     : null;
@@ -187,7 +182,7 @@ export default async function DashboardPage() {
     {
       label: "Clientes inativos",
       value: String(clientesInativos?.length ?? 0),
-      delta: "há +45 dias",
+      delta: "há +30 dias",
       deltaUp: false,
       href: "/clientes?inativo=true",
       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,

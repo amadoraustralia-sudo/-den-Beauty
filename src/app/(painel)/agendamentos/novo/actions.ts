@@ -44,27 +44,94 @@ export async function criarAgendamento(formData: FormData) {
   const valorRaw = parseFloat(formData.get("valor") as string);
   const valor = isNaN(valorRaw) || valorRaw < 0 ? null : valorRaw;
 
+  const servicosAdicionaisRaw = (formData.get("servicos_adicionais") as string)?.trim() || "[]";
+  let servicos_adicionais: unknown[] = [];
+  try { servicos_adicionais = JSON.parse(servicosAdicionaisRaw); } catch { servicos_adicionais = []; }
+  if (!Array.isArray(servicos_adicionais)) servicos_adicionais = [];
+
   const salao_id = await getSalaoId();
   if (!salao_id) redirect("/login");
 
   const supabase = await createClient();
-  const { error } = await supabase.from("agendamentos").insert({
-    cliente_id,
-    servico_id,
-    profissional_id,
-    data,
-    hora,
-    valor,
-    status,
-    forma_pagamento,
-    observacoes,
-    salao_id,
-    origem: "admin",
-  });
+  // B5: capturamos o id do novo agendamento direto no insert (mais robusto
+  //     que re-consultar por campos).
+  const { data: novoAg, error } = await supabase
+    .from("agendamentos")
+    .insert({
+      cliente_id,
+      servico_id,
+      profissional_id,
+      data,
+      hora,
+      valor,
+      status,
+      forma_pagamento,
+      observacoes,
+      salao_id,
+      origem: "admin",
+      servicos_adicionais,
+    })
+    .select("id")
+    .single();
 
-  if (error) {
-    console.error("[criarAgendamento]", error.code, error.message);
+  if (error || !novoAg) {
+    console.error("[criarAgendamento]", error?.code, error?.message);
     return { error: "Erro ao criar agendamento. Tente novamente." };
+  }
+
+  // Lançamentos automáticos se criado já como "concluido"
+  if (status === "concluido" && valor !== null && valor > 0) {
+    // Descrição do lançamento (serviço — cliente)
+    const { data: meta } = await supabase
+      .from("agendamentos")
+      .select("servicos(nome), clientes(nome)")
+      .eq("id", novoAg.id)
+      .single();
+
+    const svc = (Array.isArray(meta?.servicos) ? meta?.servicos[0] : meta?.servicos) as { nome: string } | null;
+    const cli = (Array.isArray(meta?.clientes) ? meta?.clientes[0] : meta?.clientes) as { nome: string } | null;
+    const nomeServico = svc?.nome ?? "Atendimento";
+    const descricao = cli?.nome ? `${nomeServico} — ${cli.nome}` : nomeServico;
+
+    // 1. Transação financeira (entrada)
+    await supabase.from("transacoes").upsert(
+      {
+        agendamento_id: novoAg.id,
+        tipo: "entrada",
+        descricao,
+        valor,
+        data,
+        categoria: "Serviço",
+        salao_id,
+        forma_pagamento: forma_pagamento ?? null,
+      },
+      { onConflict: "agendamento_id" }
+    );
+
+    // 2. Comissão do profissional (igual ao fluxo de mudança de status)
+    if (profissional_id) {
+      const { data: prof } = await supabase
+        .from("profissionais")
+        .select("percentual_comissao")
+        .eq("id", profissional_id)
+        .single();
+
+      const percentual = Number(prof?.percentual_comissao ?? 0);
+      if (percentual > 0) {
+        await supabase.from("comissoes").upsert(
+          {
+            agendamento_id: novoAg.id,
+            profissional_id,
+            valor_servico: valor,
+            percentual,
+            valor_comissao: valor * (percentual / 100),
+            data,
+            salao_id,
+          },
+          { onConflict: "agendamento_id" }
+        );
+      }
+    }
   }
 
   redirect("/agendamentos?toast=criado");

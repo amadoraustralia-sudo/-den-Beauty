@@ -38,13 +38,18 @@ export async function atualizarAgendamento(formData: FormData) {
   const valorRaw = parseFloat(formData.get("valor") as string);
   const valor = isNaN(valorRaw) || valorRaw < 0 ? null : valorRaw;
 
+  const servicosAdicionaisRaw = (formData.get("servicos_adicionais") as string)?.trim() || "[]";
+  let servicos_adicionais: unknown[] = [];
+  try { servicos_adicionais = JSON.parse(servicosAdicionaisRaw); } catch { servicos_adicionais = []; }
+  if (!Array.isArray(servicos_adicionais)) servicos_adicionais = [];
+
   const salao_id = await getSalaoId();
   if (!salao_id) redirect("/login");
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("agendamentos")
-    .update({ cliente_id, servico_id, profissional_id, data, hora, valor, status, forma_pagamento, observacoes })
+    .update({ cliente_id, servico_id, profissional_id, data, hora, valor, status, forma_pagamento, observacoes, servicos_adicionais })
     .eq("id", id)
     .eq("salao_id", salao_id);
 
@@ -52,5 +57,58 @@ export async function atualizarAgendamento(formData: FormData) {
     console.error("[atualizarAgendamento]", error.code, error.message);
     return { error: "Erro ao salvar. Tente novamente." };
   }
+
+  // Lançamento financeiro automático ao concluir
+  if (status === "concluido" && valor !== null && valor > 0) {
+    const { data: ag } = await supabase
+      .from("agendamentos")
+      .select("data, clientes(nome), servicos(nome)")
+      .eq("id", id)
+      .single();
+    const svc = ag ? (Array.isArray(ag.servicos) ? ag.servicos[0] : ag.servicos) as { nome: string } | null : null;
+    const cli = ag ? (Array.isArray(ag.clientes) ? ag.clientes[0] : ag.clientes) as { nome: string } | null : null;
+    const descricao = svc?.nome
+      ? (cli?.nome ? `${svc.nome} — ${cli.nome}` : svc.nome)
+      : "Atendimento";
+    await supabase.from("transacoes").upsert(
+      {
+        agendamento_id: id,
+        tipo: "entrada",
+        descricao,
+        valor,
+        data: data,
+        categoria: "Serviço",
+        salao_id,
+        forma_pagamento: forma_pagamento ?? null,
+      },
+      { onConflict: "agendamento_id" }
+    );
+  }
+
   redirect("/agendamentos?toast=atualizado");
+}
+
+export async function deletarAgendamento(id: string) {
+  if (!id) return { error: "ID inválido." };
+
+  const salao_id = await getSalaoId();
+  if (!salao_id) redirect("/login");
+
+  const supabase = await createClient();
+
+  // Remove transação financeira vinculada, se existir
+  await supabase.from("transacoes").delete().eq("agendamento_id", id).eq("salao_id", salao_id);
+
+  const { error } = await supabase
+    .from("agendamentos")
+    .delete()
+    .eq("id", id)
+    .eq("salao_id", salao_id);
+
+  if (error) {
+    console.error("[deletarAgendamento]", error.code, error.message);
+    return { error: "Erro ao excluir. Tente novamente." };
+  }
+
+  redirect("/agendamentos?toast=excluido");
 }

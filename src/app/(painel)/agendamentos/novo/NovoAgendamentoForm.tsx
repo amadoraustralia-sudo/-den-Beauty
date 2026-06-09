@@ -19,6 +19,10 @@ interface Servico { id: string; nome: string; preco: number; duracao_min: number
 interface Profissional { id: string; nome: string }
 interface Slot { hora: string; profissional_id: string; profissional_nome: string; disponivel: boolean }
 
+function formatPreco(v: number) {
+  return `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
+}
+
 export default function NovoAgendamentoForm({
   clientes,
   servicos,
@@ -47,11 +51,21 @@ export default function NovoAgendamentoForm({
     forma_pagamento: "",
     observacoes: "",
   });
+  const [servicosAdicionais, setServicosAdicionais] = useState<Servico[]>([]);
   const [erros, setErros] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState("");
   const [pending, setPending] = useState(false);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+
+  const servicoPrincipal = servicos.find((s) => s.id === fields.servico_id) ?? null;
+  const duracaoTotal = (servicoPrincipal?.duracao_min ?? 0) + servicosAdicionais.reduce((acc, s) => acc + s.duracao_min, 0);
+  const precoTotal = (servicoPrincipal?.preco ?? 0) + servicosAdicionais.reduce((acc, s) => acc + s.preco, 0);
+
+  // Serviços disponíveis para adicionar (exclui já selecionados)
+  const servicosDisponiveis = servicos.filter(
+    (s) => s.id !== fields.servico_id && !servicosAdicionais.find((a) => a.id === s.id)
+  );
 
   function set(field: string, value: string) {
     setFields((f) => ({ ...f, [field]: value }));
@@ -60,13 +74,33 @@ export default function NovoAgendamentoForm({
 
   function handleServicoChange(servicoId: string) {
     const svc = servicos.find((s) => s.id === servicoId);
+    setServicosAdicionais([]);
     setFields((f) => ({
       ...f,
       servico_id: servicoId,
       hora: "",
-      valor: !f.valor && svc ? String(svc.preco) : f.valor,
+      valor: svc ? String(svc.preco) : f.valor,
     }));
     if (erros.servico_id) setErros((e) => { const n = { ...e }; delete n.servico_id; return n; });
+  }
+
+  function adicionarServico(servicoId: string) {
+    if (!servicoId) return;
+    const svc = servicos.find((s) => s.id === servicoId);
+    if (!svc) return;
+    setServicosAdicionais((prev) => [...prev, svc]);
+    // Atualiza valor para soma dos serviços
+    const novoPreco = (servicoPrincipal?.preco ?? 0) + servicosAdicionais.reduce((acc, s) => acc + s.preco, 0) + svc.preco;
+    setFields((f) => ({ ...f, hora: "", valor: String(novoPreco) }));
+  }
+
+  function removerServico(idx: number) {
+    setServicosAdicionais((prev) => {
+      const novo = prev.filter((_, i) => i !== idx);
+      const novoPreco = (servicoPrincipal?.preco ?? 0) + novo.reduce((acc, s) => acc + s.preco, 0);
+      setFields((f) => ({ ...f, hora: "", valor: String(novoPreco) }));
+      return novo;
+    });
   }
 
   function handleDataChange(data: string) {
@@ -97,6 +131,7 @@ export default function NovoAgendamentoForm({
       p_servico_id: fields.servico_id,
       p_profissional_id: fields.profissional_id || null,
       p_salao_id: salaoId,
+      p_duracao_total: duracaoTotal > 0 ? duracaoTotal : null,
     }).then(({ data }) => {
       if (!cancelled) {
         setSlots(data ?? []);
@@ -105,7 +140,7 @@ export default function NovoAgendamentoForm({
     });
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields.servico_id, fields.data, fields.profissional_id, salaoId]);
+  }, [fields.servico_id, fields.data, fields.profissional_id, salaoId, duracaoTotal]);
 
   // Deduplicate by hora, keeping first available
   const slotsUnicos = Array.from(
@@ -134,6 +169,7 @@ export default function NovoAgendamentoForm({
     setPending(true);
     setServerError("");
     const fd = new FormData(ev.currentTarget);
+    fd.set("servicos_adicionais", JSON.stringify(servicosAdicionais.map((s) => ({ id: s.id, nome: s.nome, preco: s.preco, duracao_min: s.duracao_min }))));
     const result = await criarAgendamento(fd);
     if (result?.error) {
       const msg = result.error.startsWith("db:") ? result.error.slice(3) : "Erro ao salvar. Tente novamente.";
@@ -155,7 +191,7 @@ export default function NovoAgendamentoForm({
 
       <div>
         <h4 className="mb-3" style={{ color: "var(--text-muted)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-          Cliente e serviço
+          Cliente e serviços
         </h4>
         <div className="space-y-4">
           <div>
@@ -174,7 +210,7 @@ export default function NovoAgendamentoForm({
             )}
           </div>
           <div>
-            <label className="label">Serviço <span style={{ color: "var(--danger)" }}>*</span></label>
+            <label className="label">Serviço principal <span style={{ color: "var(--danger)" }}>*</span></label>
             <select
               name="servico_id" className="input select"
               value={fields.servico_id} onChange={(e) => handleServicoChange(e.target.value)}
@@ -183,12 +219,63 @@ export default function NovoAgendamentoForm({
               <option value="">Selecione o serviço...</option>
               {servicos.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.nome} — {s.duracao_min}min · R$ {Number(s.preco).toFixed(2).replace(".", ",")}
+                  {s.nome} — {s.duracao_min}min · {formatPreco(s.preco)}
                 </option>
               ))}
             </select>
             {erros.servico_id && <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{erros.servico_id}</p>}
           </div>
+
+          {/* Serviços adicionais */}
+          {fields.servico_id && (
+            <div>
+              {servicosAdicionais.length > 0 && (
+                <div className="mb-2 space-y-1.5">
+                  {servicosAdicionais.map((s, i) => (
+                    <div
+                      key={s.id}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg text-sm"
+                      style={{ background: "var(--bg-subtle)", border: "1px solid var(--border)" }}
+                    >
+                      <span style={{ color: "var(--text-primary)" }}>
+                        {s.nome} <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>— {s.duracao_min}min · {formatPreco(s.preco)}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removerServico(i)}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "1rem", padding: "0 2px", lineHeight: 1 }}
+                        title="Remover"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {servicosDisponiveis.length > 0 && (
+                <select
+                  className="input select"
+                  value=""
+                  onChange={(e) => adicionarServico(e.target.value)}
+                >
+                  <option value="">+ Adicionar serviço</option>
+                  {servicosDisponiveis.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nome} — {s.duracao_min}min · {formatPreco(s.preco)}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {servicosAdicionais.length > 0 && (
+                <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
+                  Total: <strong style={{ color: "var(--text-primary)" }}>{duracaoTotal}min · {formatPreco(precoTotal)}</strong>
+                </p>
+              )}
+            </div>
+          )}
+
           <div>
             <label className="label">Profissional</label>
             <select
@@ -327,11 +414,6 @@ export default function NovoAgendamentoForm({
             </select>
             {erros.forma_pagamento && (
               <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>{erros.forma_pagamento}</p>
-            )}
-            {concluido && !erros.forma_pagamento && (
-              <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-                Obrigatório para agendamentos concluídos
-              </p>
             )}
           </div>
         </div>

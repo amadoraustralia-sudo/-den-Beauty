@@ -76,7 +76,7 @@ export default async function RelatoriosPage({
   const taxaConclusao = totalAgendamentos > 0 ? Math.round((concluidos / totalAgendamentos) * 100) : 0;
 
   const receita  = transacoes?.filter((t) => t.tipo === "entrada").reduce((a, t) => a + Number(t.valor), 0) ?? 0;
-  const despesas = transacoes?.filter((t) => t.tipo === "saida").reduce((a, t) => a + Number(t.valor), 0) ?? 0;
+  const despesas = transacoes?.filter((t) => t.tipo !== "entrada").reduce((a, t) => a + Number(t.valor), 0) ?? 0;
   const lucro    = receita - despesas;
   const ticketMedio = concluidos > 0 ? receita / concluidos : 0;
 

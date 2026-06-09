@@ -302,3 +302,21 @@ h4 { font-size: 0.875rem; font-weight: 500; line-height: 1.4; }
 .nav-item:hover { color: rgb(255 255 255 / 0.9); background: rgb(255 255 255 / 0.07); }
 .nav-item.active { color: #ffffff; background: rgb(255 255 255 / 0.13); }
 .nav-item-icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.8; }
+
+/* Skeleton loading */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-subtle) 25%,
+    var(--border)    50%,
+    var(--bg-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+  display: block;
+}

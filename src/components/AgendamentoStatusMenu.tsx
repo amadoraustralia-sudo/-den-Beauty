@@ -12,7 +12,9 @@ const TRANSICOES: Record<string, { label: string; status: "aguardando" | "confir
     { label: "Concluir",   status: "concluido",  color: "var(--info)"    },
     { label: "Cancelar",   status: "cancelado",  color: "var(--danger)"  },
   ],
-  concluido: [],
+  concluido: [
+    { label: "Reabrir",    status: "aguardando", color: "var(--brand-600)" },
+  ],
   cancelado: [
     { label: "Reabrir",    status: "aguardando", color: "var(--brand-600)" },
   ],
