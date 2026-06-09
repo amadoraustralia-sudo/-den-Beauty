@@ -6,12 +6,13 @@ import { revalidatePath } from "next/cache";
 const STATUS_VALIDOS = ["aguardando", "confirmado", "concluido", "cancelado"] as const;
 type StatusValido = typeof STATUS_VALIDOS[number];
 
-export async function atualizarStatusAgendamento(id: string, status: StatusValido) {
-  if (!STATUS_VALIDOS.includes(status)) return;
+export async function atualizarStatusAgendamento(id: string, status: StatusValido): Promise<{ error: boolean }> {
+  if (!STATUS_VALIDOS.includes(status)) return { error: true };
 
   const supabase = await createClient();
 
-  await supabase.from("agendamentos").update({ status }).eq("id", id);
+  const { error: updateError } = await supabase.from("agendamentos").update({ status }).eq("id", id);
+  if (updateError) return { error: true };
 
   // Calcula comissão e cria lançamento financeiro automaticamente ao concluir
   if (status === "concluido") {
@@ -77,4 +78,5 @@ export async function atualizarStatusAgendamento(id: string, status: StatusValid
   revalidatePath("/agendamentos");
   revalidatePath("/dashboard");
   revalidatePath("/relatorios");
+  return { error: false };
 }

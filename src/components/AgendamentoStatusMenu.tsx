@@ -30,9 +30,11 @@ export default function AgendamentoStatusMenu({ id, status }: { id: string; stat
   function handleAcao(novoStatus: "aguardando" | "confirmado" | "concluido" | "cancelado") {
     setOpen(false);
     startTransition(async () => {
-      await atualizarStatusAgendamento(id, novoStatus);
+      const result = await atualizarStatusAgendamento(id, novoStatus);
       window.dispatchEvent(new CustomEvent("show-toast", {
-        detail: { message: "Status atualizado.", type: "success" },
+        detail: result?.error
+          ? { message: "Erro ao atualizar status. Tente novamente.", type: "error" }
+          : { message: "Status atualizado.", type: "success" },
       }));
     });
   }

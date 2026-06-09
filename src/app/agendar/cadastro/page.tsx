@@ -74,7 +74,9 @@ export default function CadastroPortalPage() {
     });
 
     if (rpcError) {
-      setError("Sua conta foi criada, mas houve um problema ao concluir o cadastro do perfil. Tente fazer login; se persistir, contate o salão.");
+      // Desfaz a conta Auth para evitar usuário órfão sem perfil em clientes
+      await supabase.auth.signOut();
+      setError("Houve um problema ao finalizar seu cadastro. Tente novamente ou contate o salão.");
       setLoading(false);
       return;
     }

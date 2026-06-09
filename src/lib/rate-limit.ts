@@ -59,6 +59,6 @@ export function getClientIp(headers: Headers): string {
   }
   const realIp = headers.get("x-real-ip");
   if (realIp) return realIp;
-  // Fallback único por instância — não bloqueia usuários legítimos
-  return `instance-${Math.random().toString(36).slice(2, 8)}`;
+  // Fallback para ambiente local sem headers de proxy
+  return '127.0.0.1';
 }
