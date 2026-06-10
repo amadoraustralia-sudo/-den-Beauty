@@ -18,6 +18,7 @@ const PORTAL_PROTECTED = [
 const ADMIN_ROUTES = [
   "/dashboard", "/agenda", "/clientes", "/agendamentos",
   "/profissionais", "/servicos", "/financeiro", "/relatorios", "/configuracoes",
+  "/minha-conta",
 ];
 
 export async function proxy(request: NextRequest) {

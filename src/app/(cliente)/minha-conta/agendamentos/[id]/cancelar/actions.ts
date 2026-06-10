@@ -15,8 +15,8 @@ export async function cancelarAgendamento(formData: FormData) {
   const { data: cliente } = await supabase
     .from("clientes")
     .select("id")
-    .eq("email", user.email!)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   if (!cliente) redirect("/minha-conta/agendamentos");
 

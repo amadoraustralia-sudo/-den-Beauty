@@ -1,6 +1,12 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import ClienteNav from "@/components/ClienteNav";
 
-export default function ClienteLayout({ children }: { children: React.ReactNode }) {
+export default async function ClienteLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
       <ClienteNav />
