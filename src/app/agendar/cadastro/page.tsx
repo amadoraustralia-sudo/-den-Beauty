@@ -64,8 +64,14 @@ export default function CadastroPortalPage() {
       return;
     }
 
-    // 2. Criar/vincular registro em `clientes` via função SECURITY DEFINER.
-    //    M3: agora checamos o erro retornado (antes era ignorado).
+    // 2. Se confirmação de e-mail estiver ativa, signUp não cria sessão imediata —
+    //    o RPC exige autenticação (anon EXECUTE revogado); redireciona sem chamar o RPC.
+    if (!authData.session) {
+      router.push("/agendar/login?aviso=confirme-email");
+      return;
+    }
+
+    // 3. Sessão ativa confirmada: cria/vincula registro em `clientes` via SECURITY DEFINER.
     const { error: rpcError } = await supabase.rpc("register_portal_client", {
       p_nome: form.nome.trim(),
       p_email: form.email.trim(),
@@ -74,22 +80,14 @@ export default function CadastroPortalPage() {
     });
 
     if (rpcError) {
-      // Desfaz a conta Auth para evitar usuário órfão sem perfil em clientes
+      // Sessão verificada acima — signOut desfaz o Auth user para evitar conta órfã
       await supabase.auth.signOut();
       setError("Houve um problema ao finalizar seu cadastro. Tente novamente ou contate o salão.");
       setLoading(false);
       return;
     }
 
-    // 3. M3: se a confirmação de e-mail estiver ativada no Supabase, o signUp
-    //    NÃO retorna sessão. Nesse caso não dá para entrar na área logada ainda
-    //    (e o auth_user_id do cliente só será vinculado após o 1º login).
-    if (!authData.session) {
-      router.push("/agendar/login?aviso=confirme-email");
-      return;
-    }
-
-    // 4. Sessão ativa: cadastro completo e vinculado.
+    // 4. Cadastro completo e vinculado.
     router.push("/agendar/inicio?toast=bemvindo");
     router.refresh();
   }
