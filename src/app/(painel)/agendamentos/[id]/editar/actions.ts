@@ -58,18 +58,19 @@ export async function atualizarAgendamento(formData: FormData) {
     return { error: "Erro ao salvar. Tente novamente." };
   }
 
-  // Lançamento financeiro automático ao concluir
+  // Lançamentos automáticos ao concluir
   if (status === "concluido" && valor !== null && valor > 0) {
-    const { data: ag } = await supabase
+    const { data: meta } = await supabase
       .from("agendamentos")
-      .select("data, clientes(nome), servicos(nome)")
+      .select("clientes(nome), servicos(nome)")
       .eq("id", id)
       .single();
-    const svc = ag ? (Array.isArray(ag.servicos) ? ag.servicos[0] : ag.servicos) as { nome: string } | null : null;
-    const cli = ag ? (Array.isArray(ag.clientes) ? ag.clientes[0] : ag.clientes) as { nome: string } | null : null;
+    const svc = meta ? (Array.isArray(meta.servicos) ? meta.servicos[0] : meta.servicos) as { nome: string } | null : null;
+    const cli = meta ? (Array.isArray(meta.clientes) ? meta.clientes[0] : meta.clientes) as { nome: string } | null : null;
     const descricao = svc?.nome
       ? (cli?.nome ? `${svc.nome} — ${cli.nome}` : svc.nome)
       : "Atendimento";
+
     await supabase.from("transacoes").upsert(
       {
         agendamento_id: id,
@@ -83,6 +84,31 @@ export async function atualizarAgendamento(formData: FormData) {
       },
       { onConflict: "agendamento_id" }
     );
+
+    // Comissão do profissional (estava ausente neste fluxo)
+    if (profissional_id) {
+      const { data: prof } = await supabase
+        .from("profissionais")
+        .select("percentual_comissao")
+        .eq("id", profissional_id)
+        .single();
+
+      const percentual = Number(prof?.percentual_comissao ?? 0);
+      if (percentual > 0) {
+        await supabase.from("comissoes").upsert(
+          {
+            agendamento_id: id,
+            profissional_id,
+            valor_servico: valor,
+            percentual,
+            valor_comissao: valor * (percentual / 100),
+            data: data,
+            salao_id,
+          },
+          { onConflict: "agendamento_id" }
+        );
+      }
+    }
   }
 
   redirect("/agendamentos?toast=atualizado");

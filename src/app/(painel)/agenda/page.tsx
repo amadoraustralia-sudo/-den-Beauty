@@ -16,6 +16,7 @@ function getMondayOfWeek(dateStr: string) {
 export default async function AgendaPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const hoje = params.data ?? new Date().toISOString().split("T")[0];
 
   const monday = getMondayOfWeek(hoje);
@@ -48,8 +49,8 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
     supabase
       .from("configuracoes")
       .select("horarios_semana, horario_abertura, horario_fechamento, intervalo_agendamento")
-      .limit(1)
-      .single(),
+      .eq("owner_user_id", user?.id ?? "")
+      .maybeSingle(),
     supabase
       .from("horarios_bloqueados")
       .select("id, profissional_id, data, hora_inicio, hora_fim, motivo")
