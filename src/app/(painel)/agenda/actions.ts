@@ -15,6 +15,16 @@ export async function bloquearHorario(
   if (!salao_id) return { error: "Não autenticado" };
 
   const supabase = await createClient();
+
+  // Verifica que o profissional pertence ao salão do admin
+  const { data: prof } = await supabase
+    .from("profissionais")
+    .select("id")
+    .eq("id", profissional_id)
+    .eq("salao_id", salao_id)
+    .single();
+  if (!prof) return { error: "Profissional não encontrado." };
+
   const { data: result, error } = await supabase
     .from("horarios_bloqueados")
     .insert({ salao_id, profissional_id, data, hora_inicio, hora_fim, motivo: motivo || null })

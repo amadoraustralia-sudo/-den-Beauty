@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getSalaoId } from "@/lib/supabase/salon";
+import { lancarConclusao } from "@/lib/agendamentos/lancarConclusao";
 import { redirect } from "next/navigation";
 
 const STATUS_VALIDOS = ["aguardando", "confirmado", "concluido", "cancelado"] as const;
@@ -45,16 +46,35 @@ export async function criarAgendamento(formData: FormData) {
   const valor = isNaN(valorRaw) || valorRaw < 0 ? null : valorRaw;
 
   const servicosAdicionaisRaw = (formData.get("servicos_adicionais") as string)?.trim() || "[]";
-  let servicos_adicionais: unknown[] = [];
-  try { servicos_adicionais = JSON.parse(servicosAdicionaisRaw); } catch { servicos_adicionais = []; }
-  if (!Array.isArray(servicos_adicionais)) servicos_adicionais = [];
+  let servicosAdicionaisParsed: unknown[] = [];
+  try { servicosAdicionaisParsed = JSON.parse(servicosAdicionaisRaw); } catch { servicosAdicionaisParsed = []; }
+  if (!Array.isArray(servicosAdicionaisParsed)) servicosAdicionaisParsed = [];
 
   const salao_id = await getSalaoId();
   if (!salao_id) redirect("/login");
 
   const supabase = await createClient();
-  // B5: capturamos o id do novo agendamento direto no insert (mais robusto
-  //     que re-consultar por campos).
+
+  // Valida servicos_adicionais contra o DB — rejeita preços adulterados pelo client
+  let servicos_adicionais: Array<{ id: string; nome: string; preco: number; duracao_min: number }> = [];
+  if (servicosAdicionaisParsed.length > 0) {
+    const ids = (servicosAdicionaisParsed as Array<{ id?: unknown }>)
+      .map((s) => (typeof s?.id === "string" ? s.id : null))
+      .filter(Boolean) as string[];
+    if (ids.length > 0) {
+      const { data: svcsDb } = await supabase
+        .from("servicos")
+        .select("id, nome, preco, duracao_min")
+        .in("id", ids)
+        .eq("salao_id", salao_id)
+        .eq("ativo", true);
+      if (svcsDb) {
+        const dbMap = new Map(svcsDb.map((s) => [s.id, s]));
+        servicos_adicionais = ids.map((id) => dbMap.get(id)).filter(Boolean) as typeof servicos_adicionais;
+      }
+    }
+  }
+
   const { data: novoAg, error } = await supabase
     .from("agendamentos")
     .insert({
@@ -79,59 +99,22 @@ export async function criarAgendamento(formData: FormData) {
     return { error: "Erro ao criar agendamento. Tente novamente." };
   }
 
-  // Lançamentos automáticos se criado já como "concluido"
   if (status === "concluido" && valor !== null && valor > 0) {
-    // Descrição do lançamento (serviço — cliente)
-    const { data: meta } = await supabase
-      .from("agendamentos")
-      .select("servicos(nome), clientes(nome)")
-      .eq("id", novoAg.id)
-      .single();
-
-    const svc = (Array.isArray(meta?.servicos) ? meta?.servicos[0] : meta?.servicos) as { nome: string } | null;
-    const cli = (Array.isArray(meta?.clientes) ? meta?.clientes[0] : meta?.clientes) as { nome: string } | null;
-    const nomeServico = svc?.nome ?? "Atendimento";
-    const descricao = cli?.nome ? `${nomeServico} — ${cli.nome}` : nomeServico;
-
-    // 1. Transação financeira (entrada)
-    await supabase.from("transacoes").upsert(
-      {
-        agendamento_id: novoAg.id,
-        tipo: "entrada",
-        descricao,
-        valor,
-        data,
-        categoria: "Serviço",
-        salao_id,
-        forma_pagamento: forma_pagamento ?? null,
-      },
-      { onConflict: "agendamento_id" }
-    );
-
-    // 2. Comissão do profissional (igual ao fluxo de mudança de status)
-    if (profissional_id) {
-      const { data: prof } = await supabase
-        .from("profissionais")
-        .select("percentual_comissao")
-        .eq("id", profissional_id)
-        .single();
-
-      const percentual = Number(prof?.percentual_comissao ?? 0);
-      if (percentual > 0) {
-        await supabase.from("comissoes").upsert(
-          {
-            agendamento_id: novoAg.id,
-            profissional_id,
-            valor_servico: valor,
-            percentual,
-            valor_comissao: valor * (percentual / 100),
-            data,
-            salao_id,
-          },
-          { onConflict: "agendamento_id" }
-        );
-      }
-    }
+    const [{ data: svcData }, { data: cliData }] = await Promise.all([
+      supabase.from("servicos").select("nome").eq("id", servico_id).single(),
+      supabase.from("clientes").select("nome").eq("id", cliente_id).single(),
+    ]);
+    const nomeServico = svcData?.nome ?? "Atendimento";
+    const descricao = cliData?.nome ? `${nomeServico} — ${cliData.nome}` : nomeServico;
+    await lancarConclusao(supabase, {
+      agendamento_id: novoAg.id,
+      salao_id,
+      valor,
+      data,
+      profissional_id,
+      forma_pagamento: forma_pagamento ?? null,
+      descricao,
+    });
   }
 
   redirect("/agendamentos?toast=criado");

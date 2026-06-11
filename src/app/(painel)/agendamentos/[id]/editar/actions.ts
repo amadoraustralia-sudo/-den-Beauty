@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getSalaoId } from "@/lib/supabase/salon";
+import { lancarConclusao } from "@/lib/agendamentos/lancarConclusao";
 import { redirect } from "next/navigation";
 
 const STATUS_VALIDOS = ["aguardando", "confirmado", "concluido", "cancelado"] as const;
@@ -39,14 +40,34 @@ export async function atualizarAgendamento(formData: FormData) {
   const valor = isNaN(valorRaw) || valorRaw < 0 ? null : valorRaw;
 
   const servicosAdicionaisRaw = (formData.get("servicos_adicionais") as string)?.trim() || "[]";
-  let servicos_adicionais: unknown[] = [];
-  try { servicos_adicionais = JSON.parse(servicosAdicionaisRaw); } catch { servicos_adicionais = []; }
-  if (!Array.isArray(servicos_adicionais)) servicos_adicionais = [];
+  let servicosAdicionaisParsed: unknown[] = [];
+  try { servicosAdicionaisParsed = JSON.parse(servicosAdicionaisRaw); } catch { servicosAdicionaisParsed = []; }
+  if (!Array.isArray(servicosAdicionaisParsed)) servicosAdicionaisParsed = [];
 
   const salao_id = await getSalaoId();
   if (!salao_id) redirect("/login");
 
   const supabase = await createClient();
+
+  // Valida servicos_adicionais contra o DB — rejeita preços adulterados pelo client
+  let servicos_adicionais: Array<{ id: string; nome: string; preco: number; duracao_min: number }> = [];
+  if (servicosAdicionaisParsed.length > 0) {
+    const ids = (servicosAdicionaisParsed as Array<{ id?: unknown }>)
+      .map((s) => (typeof s?.id === "string" ? s.id : null))
+      .filter(Boolean) as string[];
+    if (ids.length > 0) {
+      const { data: svcsDb } = await supabase
+        .from("servicos")
+        .select("id, nome, preco, duracao_min")
+        .in("id", ids)
+        .eq("salao_id", salao_id)
+        .eq("ativo", true);
+      if (svcsDb) {
+        const dbMap = new Map(svcsDb.map((s) => [s.id, s]));
+        servicos_adicionais = ids.map((id) => dbMap.get(id)).filter(Boolean) as typeof servicos_adicionais;
+      }
+    }
+  }
   const { error } = await supabase
     .from("agendamentos")
     .update({ cliente_id, servico_id, profissional_id, data, hora, valor, status, forma_pagamento, observacoes, servicos_adicionais })
@@ -58,57 +79,22 @@ export async function atualizarAgendamento(formData: FormData) {
     return { error: "Erro ao salvar. Tente novamente." };
   }
 
-  // Lançamentos automáticos ao concluir
   if (status === "concluido" && valor !== null && valor > 0) {
-    const { data: meta } = await supabase
-      .from("agendamentos")
-      .select("clientes(nome), servicos(nome)")
-      .eq("id", id)
-      .single();
-    const svc = meta ? (Array.isArray(meta.servicos) ? meta.servicos[0] : meta.servicos) as { nome: string } | null : null;
-    const cli = meta ? (Array.isArray(meta.clientes) ? meta.clientes[0] : meta.clientes) as { nome: string } | null : null;
-    const descricao = svc?.nome
-      ? (cli?.nome ? `${svc.nome} — ${cli.nome}` : svc.nome)
-      : "Atendimento";
-
-    await supabase.from("transacoes").upsert(
-      {
-        agendamento_id: id,
-        tipo: "entrada",
-        descricao,
-        valor,
-        data: data,
-        categoria: "Serviço",
-        salao_id,
-        forma_pagamento: forma_pagamento ?? null,
-      },
-      { onConflict: "agendamento_id" }
-    );
-
-    // Comissão do profissional (estava ausente neste fluxo)
-    if (profissional_id) {
-      const { data: prof } = await supabase
-        .from("profissionais")
-        .select("percentual_comissao")
-        .eq("id", profissional_id)
-        .single();
-
-      const percentual = Number(prof?.percentual_comissao ?? 0);
-      if (percentual > 0) {
-        await supabase.from("comissoes").upsert(
-          {
-            agendamento_id: id,
-            profissional_id,
-            valor_servico: valor,
-            percentual,
-            valor_comissao: valor * (percentual / 100),
-            data: data,
-            salao_id,
-          },
-          { onConflict: "agendamento_id" }
-        );
-      }
-    }
+    const [{ data: svcData }, { data: cliData }] = await Promise.all([
+      supabase.from("servicos").select("nome").eq("id", servico_id).single(),
+      supabase.from("clientes").select("nome").eq("id", cliente_id).single(),
+    ]);
+    const nomeServico = svcData?.nome ?? "Atendimento";
+    const descricao = cliData?.nome ? `${nomeServico} — ${cliData.nome}` : nomeServico;
+    await lancarConclusao(supabase, {
+      agendamento_id: id,
+      salao_id,
+      valor,
+      data,
+      profissional_id,
+      forma_pagamento: forma_pagamento ?? null,
+      descricao,
+    });
   }
 
   redirect("/agendamentos?toast=atualizado");
