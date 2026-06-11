@@ -48,11 +48,11 @@ export default function PerfilPortalPage({
       let cliente = null;
       if (config) {
         const { data: c1 } = await supabase.from("clientes").select("*")
-          .eq("auth_user_id", user.id).eq("salao_id", config.id).single();
+          .eq("auth_user_id", user.id).eq("salao_id", config.id).maybeSingle();
         if (c1) { cliente = c1; }
         else if (user.email) {
           const { data: c2 } = await supabase.from("clientes").select("*")
-            .eq("email", user.email).eq("salao_id", config.id).single();
+            .eq("email", user.email).eq("salao_id", config.id).maybeSingle();
           cliente = c2;
         }
       }

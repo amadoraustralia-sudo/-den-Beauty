@@ -97,11 +97,11 @@ export default async function MeusAgendamentosPage({
 
   let clienteId = "00000000-0000-0000-0000-000000000000";
   const { data: c1 } = await supabase.from("clientes").select("id")
-    .eq("auth_user_id", user.id).eq("salao_id", config.id).single();
+    .eq("auth_user_id", user.id).eq("salao_id", config.id).maybeSingle();
   if (c1) { clienteId = c1.id; }
   else if (user.email) {
     const { data: c2 } = await supabase.from("clientes").select("id")
-      .eq("email", user.email).eq("salao_id", config.id).single();
+      .eq("email", user.email).eq("salao_id", config.id).maybeSingle();
     if (c2) clienteId = c2.id;
   }
 

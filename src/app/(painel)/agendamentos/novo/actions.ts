@@ -100,21 +100,25 @@ export async function criarAgendamento(formData: FormData) {
   }
 
   if (status === "concluido" && valor !== null && valor > 0) {
-    const [{ data: svcData }, { data: cliData }] = await Promise.all([
-      supabase.from("servicos").select("nome").eq("id", servico_id).single(),
-      supabase.from("clientes").select("nome").eq("id", cliente_id).single(),
-    ]);
-    const nomeServico = svcData?.nome ?? "Atendimento";
-    const descricao = cliData?.nome ? `${nomeServico} — ${cliData.nome}` : nomeServico;
-    await lancarConclusao(supabase, {
-      agendamento_id: novoAg.id,
-      salao_id,
-      valor,
-      data,
-      profissional_id,
-      forma_pagamento: forma_pagamento ?? null,
-      descricao,
-    });
+    try {
+      const [{ data: svcData }, { data: cliData }] = await Promise.all([
+        supabase.from("servicos").select("nome").eq("id", servico_id).maybeSingle(),
+        supabase.from("clientes").select("nome").eq("id", cliente_id).maybeSingle(),
+      ]);
+      const nomeServico = svcData?.nome ?? "Atendimento";
+      const descricao = cliData?.nome ? `${nomeServico} — ${cliData.nome}` : nomeServico;
+      await lancarConclusao(supabase, {
+        agendamento_id: novoAg.id,
+        salao_id,
+        valor,
+        data,
+        profissional_id,
+        forma_pagamento: forma_pagamento ?? null,
+        descricao,
+      });
+    } catch (e) {
+      console.error("[criarAgendamento] lancarConclusao", e);
+    }
   }
 
   redirect("/agendamentos?toast=criado");

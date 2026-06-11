@@ -13,8 +13,8 @@ export default async function CancelarPage({ params }: { params: Promise<{ id: s
   const { data: cliente } = await supabase
     .from("clientes")
     .select("id")
-    .eq("email", user.email!)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   const { data: agendamento } = await supabase
     .from("agendamentos")

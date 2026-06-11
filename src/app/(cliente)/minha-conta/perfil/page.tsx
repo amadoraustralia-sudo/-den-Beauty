@@ -17,8 +17,8 @@ export default async function PerfilPage({
   const { data: cliente } = await supabase
     .from("clientes")
     .select("*")
-    .eq("email", user.email!)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   return (
     <div className="space-y-6">

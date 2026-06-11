@@ -32,11 +32,15 @@ export async function cancelarAgendamento(formData: FormData) {
     redirect("/minha-conta/agendamentos");
   }
 
-  await supabase
+  const { data: updated } = await supabase
     .from("agendamentos")
     .update({ status: "cancelado" })
     .eq("id", id)
-    .eq("cliente_id", cliente.id);
+    .eq("cliente_id", cliente.id)
+    .select("id")
+    .single();
+
+  if (!updated) redirect("/minha-conta/agendamentos");
 
   redirect("/minha-conta/agendamentos");
 }

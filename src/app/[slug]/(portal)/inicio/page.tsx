@@ -30,12 +30,12 @@ export default async function InicioPage({
   // Busca cliente
   let cliente = null;
   const { data: c1 } = await supabase
-    .from("clientes").select("*").eq("auth_user_id", user.id).eq("salao_id", config.id).single();
+    .from("clientes").select("*").eq("auth_user_id", user.id).eq("salao_id", config.id).maybeSingle();
   if (c1) {
     cliente = c1;
   } else if (user.email) {
     const { data: c2 } = await supabase
-      .from("clientes").select("*").eq("email", user.email).eq("salao_id", config.id).single();
+      .from("clientes").select("*").eq("email", user.email).eq("salao_id", config.id).maybeSingle();
     cliente = c2;
     if (c2 && !c2.auth_user_id) {
       await supabase.from("clientes").update({ auth_user_id: user.id }).eq("id", c2.id);

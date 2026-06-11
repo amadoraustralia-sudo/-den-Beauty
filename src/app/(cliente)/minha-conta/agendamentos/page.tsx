@@ -84,8 +84,8 @@ export default async function AgendamentosPage() {
   const { data: cliente } = await supabase
     .from("clientes")
     .select("id")
-    .eq("email", user.email!)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   const clienteId = cliente?.id ?? "00000000-0000-0000-0000-000000000000";
 

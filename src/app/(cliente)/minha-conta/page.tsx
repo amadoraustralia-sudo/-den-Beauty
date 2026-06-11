@@ -14,12 +14,11 @@ export default async function MinhaContaPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Busca cliente pelo email
   const { data: cliente } = await supabase
     .from("clientes")
     .select("*")
-    .eq("email", user.email!)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   // Próximos agendamentos
   const hoje = new Date().toISOString().split("T")[0];
