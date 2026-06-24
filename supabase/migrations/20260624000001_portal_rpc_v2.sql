@@ -3,8 +3,10 @@
 -- 2. Adiciona deletar_salao() SECURITY DEFINER para deleção atômica (M4)
 
 -- ============================================================
--- Expande get_configuracoes_portal (CREATE OR REPLACE seguro)
+-- Expande get_configuracoes_portal (DROP necessário por mudança de tipo de retorno)
 -- ============================================================
+
+DROP FUNCTION IF EXISTS get_configuracoes_portal(TEXT);
 
 CREATE OR REPLACE FUNCTION get_configuracoes_portal(p_slug TEXT)
 RETURNS TABLE (
