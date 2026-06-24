@@ -11,8 +11,8 @@ export default async function CancelarPage({
   const { slug, id } = await params;
   const supabase = await createClient();
 
-  const { data: config } = await supabase
-    .from("configuracoes").select("id").eq("slug", slug).single();
+  const { data: configRows } = await supabase.rpc("get_configuracoes_portal", { p_slug: slug });
+  const config = (configRows as any[])?.[0] ?? null;
   if (!config) notFound();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -20,7 +20,7 @@ export default async function CancelarPage({
 
   const { data: cliente } = await supabase
     .from("clientes").select("id")
-    .eq("auth_user_id", user.id).eq("salao_id", config.id).single();
+    .eq("auth_user_id", user.id).eq("salao_id", config.id).maybeSingle();
 
   const { data: agendamento } = await supabase
     .from("agendamentos")

@@ -12,13 +12,8 @@ export default async function SlugPortalLayout({
   const { slug } = await params;
   const supabase = await createClient();
 
-  // Verifica se o salão existe
-  const { data: config } = await supabase
-    .from("configuracoes")
-    .select("id, nome_estabelecimento, logo_url")
-    .eq("slug", slug)
-    .single();
-
+  const { data: configRows } = await supabase.rpc("get_configuracoes_portal", { p_slug: slug });
+  const config = (configRows as any[])?.[0] ?? null;
   if (!config) notFound();
 
   // Verifica autenticação do cliente

@@ -22,16 +22,8 @@ export async function toggleSalaoAtivo(salaoId: string, ativo: boolean) {
 
 export async function deletarSalao(salaoId: string) {
   const supabase = await assertSuperAdmin();
-  // Deleta na ordem correta para respeitar FKs
-  await supabase.from("comissoes").delete().eq("salao_id", salaoId);
-  await supabase.from("transacoes").delete().eq("salao_id", salaoId);
-  await supabase.from("horarios_bloqueados").delete().eq("salao_id", salaoId);
-  await supabase.from("agendamentos").delete().eq("salao_id", salaoId);
-  await supabase.from("clientes").delete().eq("salao_id", salaoId);
-  await supabase.from("servicos").delete().eq("salao_id", salaoId);
-  await supabase.from("profissionais").delete().eq("salao_id", salaoId);
-  await supabase.from("profiles").update({ salao_id: null }).eq("salao_id", salaoId);
-  await supabase.from("configuracoes").delete().eq("id", salaoId);
+  const { error } = await supabase.rpc("deletar_salao", { p_salao_id: salaoId });
+  if (error) throw new Error(error.message);
   revalidatePath("/admin/saloes");
   redirect("/admin/saloes");
 }

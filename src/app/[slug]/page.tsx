@@ -19,32 +19,27 @@ export default async function SalaoLandingPage({
   const { slug } = await params;
   const supabase = await createClient();
 
-  // Resolve salão pelo slug
-  const { data: config } = await supabase
-    .from("configuracoes")
-    .select("*")
-    .eq("slug", slug)
-    .single();
-
+  const { data: configRows } = await supabase.rpc("get_configuracoes_portal", { p_slug: slug });
+  const config = (configRows as any[])?.[0] ?? null;
   if (!config) notFound();
 
-  const salao_id = config.id;
-  const nomeEstabelecimento = config.nome_estabelecimento ?? "Salão";
+  const salao_id = config.id as string;
+  const nomeEstabelecimento = (config.nome_estabelecimento as string | null) ?? "Salão";
 
   const [
-    { data: servicos },
+    { data: servicosRaw },
     { data: profissionais },
     { data: { user } },
   ] = await Promise.all([
-    supabase.from("servicos").select("id, nome, categoria, descricao, duracao_min, preco")
-      .eq("salao_id", salao_id).eq("ativo", true).gt("preco", 0).order("categoria").order("nome"),
+    supabase.rpc("get_servicos_portal", { p_slug: slug }),
     supabase.from("profissionais").select("id, nome, cargo, especialidades")
       .eq("salao_id", salao_id).eq("ativo", true).order("nome"),
     supabase.auth.getUser(),
   ]);
 
+  const servicos = ((servicosRaw as any[]) ?? []).filter((s) => s.preco > 0);
   const isLogado = !!user;
-  const categorias = [...new Set((servicos ?? []).map((s) => s.categoria))];
+  const categorias = [...new Set(servicos.map((s) => s.categoria))];
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F5F0E8" }}>
@@ -103,13 +98,13 @@ export default async function SalaoLandingPage({
                 {config.telefone}
               </span>
             )}
-            {config.endereco && (
+            {(config.endereco as string | null) && (
               <span className="flex items-center gap-1.5 text-sm" style={{ color: "rgb(255 255 255 / 0.65)" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 {config.endereco}
               </span>
             )}
-            {config.horario_abertura && (
+            {(config.horario_abertura as string | null) && (
               <span className="flex items-center gap-1.5 text-sm" style={{ color: "rgb(255 255 255 / 0.65)" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 {config.horario_abertura?.slice(0, 5)} – {config.horario_fechamento?.slice(0, 5)}
@@ -129,7 +124,7 @@ export default async function SalaoLandingPage({
       </section>
 
       {/* SERVIÇOS */}
-      {servicos && servicos.length > 0 && (
+      {servicos.length > 0 && (
         <section className="py-16">
           <div className="max-w-5xl mx-auto px-4">
             <div className="text-center mb-10">

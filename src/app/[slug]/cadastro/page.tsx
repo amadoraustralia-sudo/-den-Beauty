@@ -20,10 +20,11 @@ export default function CadastroPortalPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.from("configuracoes").select("nome_estabelecimento, logo_url").eq("slug", slug).single()
+    supabase.rpc("get_configuracoes_portal", { p_slug: slug })
       .then(({ data }) => {
-        if (data?.nome_estabelecimento) setSalonName(data.nome_estabelecimento);
-        if ((data as any)?.logo_url) setSalonLogoUrl((data as any).logo_url);
+        const config = (data as any[])?.[0];
+        if (config?.nome_estabelecimento) setSalonName(config.nome_estabelecimento);
+        if (config?.logo_url) setSalonLogoUrl(config.logo_url);
       });
   }, [slug]);
 
@@ -52,12 +53,8 @@ export default function CadastroPortalPage() {
 
     const supabase = createClient();
 
-    // Busca o salao_id pelo slug
-    const { data: config } = await supabase
-      .from("configuracoes")
-      .select("id, nome_estabelecimento, logo_url")
-      .eq("slug", slug)
-      .single();
+    const { data: configRows } = await supabase.rpc("get_configuracoes_portal", { p_slug: slug });
+    const config = (configRows as any[])?.[0] ?? null;
 
     if (!config) {
       setError("Salão não encontrado.");
