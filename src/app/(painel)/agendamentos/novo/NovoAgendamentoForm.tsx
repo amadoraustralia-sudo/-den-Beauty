@@ -74,12 +74,17 @@ export default function NovoAgendamentoForm({
 
   function handleServicoChange(servicoId: string) {
     const svc = servicos.find((s) => s.id === servicoId);
+    const prevSvc = servicos.find((s) => s.id === fields.servico_id);
     setServicosAdicionais([]);
     setFields((f) => ({
       ...f,
       servico_id: servicoId,
       hora: "",
-      valor: svc ? String(svc.preco) : f.valor,
+      // Atualiza para o preço do novo serviço se o campo estava vazio ou com o
+      // preço do serviço anterior (auto-preenchido). Preserva preço customizado.
+      valor: svc
+        ? (!f.valor || f.valor === String(prevSvc?.preco ?? "") ? String(svc.preco) : f.valor)
+        : f.valor,
     }));
     if (erros.servico_id) setErros((e) => { const n = { ...e }; delete n.servico_id; return n; });
   }

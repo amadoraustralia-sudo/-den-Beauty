@@ -51,7 +51,9 @@ export async function signIn(formData: FormData) {
     .eq("id", data.user.id)
     .single();
 
-  const customRedirect = (formData.get("redirect") as string | null)?.trim();
+  const rawRedirect = (formData.get("redirect") as string | null)?.trim();
+  // Rejeita redirects externos (open redirect); exige caminho relativo sem //
+  const customRedirect = rawRedirect?.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : null;
 
   if (profile?.role === "super_admin") {
     return { redirectTo: "/admin" };

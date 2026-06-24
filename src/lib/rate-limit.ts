@@ -59,6 +59,11 @@ export function getClientIp(headers: Headers): string {
   }
   const realIp = headers.get("x-real-ip");
   if (realIp) return realIp;
-  // Fallback único por instância — não bloqueia usuários legítimos
-  return `instance-${Math.random().toString(36).slice(2, 8)}`;
+  // Fallback para ambiente local sem headers de proxy.
+  // Em dev, múltiplos usuários compartilham o bucket — aceitável.
+  // Em produção (Vercel) x-forwarded-for é sempre injetado; este bloco nunca é atingido.
+  if (process.env.NODE_ENV !== 'production') {
+    console.warn('[rate-limit] IP header ausente: fallback 127.0.0.1 (bucket compartilhado em dev)');
+  }
+  return '127.0.0.1';
 }

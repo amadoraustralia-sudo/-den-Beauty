@@ -1,11 +1,17 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Toaster from "@/components/Toaster";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import SalonSetupGuard from "@/components/SalonSetupGuard";
+import { createClient } from "@/lib/supabase/server";
 import { getSalon } from "@/lib/supabase/salon";
 
 export default async function PainelLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
   const salon = await getSalon();
   const initialLogoUrl = (salon as any)?.logo_url ?? null;
   const initialSalonName = salon?.nome_estabelecimento ?? null;

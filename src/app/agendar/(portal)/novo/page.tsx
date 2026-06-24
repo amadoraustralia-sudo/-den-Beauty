@@ -11,10 +11,10 @@ export default async function NovoAgendamentoPortalPage() {
   let clienteNome: string | null = null;
   let salaoId: string | null = null;
 
-  const { data: c1 } = await supabase.from("clientes").select("id, nome, salao_id").eq("auth_user_id", user.id).single();
+  const { data: c1 } = await supabase.from("clientes").select("id, nome, salao_id").eq("auth_user_id", user.id).maybeSingle();
   if (c1) { clienteId = c1.id; clienteNome = c1.nome; salaoId = c1.salao_id; }
   else if (user.email) {
-    const { data: c2 } = await supabase.from("clientes").select("id, nome, salao_id").eq("email", user.email).single();
+    const { data: c2 } = await supabase.from("clientes").select("id, nome, salao_id").eq("email", user.email).maybeSingle();
     if (c2) { clienteId = c2.id; clienteNome = c2.nome; salaoId = c2.salao_id; }
   }
 

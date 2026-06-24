@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getSalon } from "@/lib/supabase/salon";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export async function salvarLogoUrl(logoUrl: string): Promise<{ error?: string }> {
@@ -13,6 +14,7 @@ export async function salvarLogoUrl(logoUrl: string): Promise<{ error?: string }
     .update({ logo_url: logoUrl })
     .eq("owner_user_id", user.id);
   if (error) return { error: error.message };
+  revalidatePath("/configuracoes");
   return {};
 }
 
