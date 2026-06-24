@@ -41,9 +41,8 @@ export default function PerfilPortalPage({
       if (!user) return;
       setUserEmail(user.email ?? "");
 
-      // Resolve salão pelo slug
-      const { data: config } = await supabase
-        .from("configuracoes").select("id").eq("slug", slug).single();
+      const { data: configRows } = await supabase.rpc("get_configuracoes_portal", { p_slug: slug });
+      const config = (configRows as any[])?.[0] ?? null;
 
       let cliente = null;
       if (config) {

@@ -20,8 +20,8 @@ export default async function InicioPage({
   const { toast } = await searchParams;
   const supabase = await createClient();
 
-  const { data: config } = await supabase
-    .from("configuracoes").select("id").eq("slug", slug).single();
+  const { data: configRows } = await supabase.rpc("get_configuracoes_portal", { p_slug: slug });
+  const config = (configRows as any[])?.[0] ?? null;
   if (!config) notFound();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -44,7 +44,7 @@ export default async function InicioPage({
 
   const hoje = new Date().toISOString().split("T")[0];
 
-  const [{ data: proximos }, { data: servicos }] = await Promise.all([
+  const [{ data: proximos }, { data: servicosRaw }] = await Promise.all([
     supabase
       .from("agendamentos")
       .select("*, servicos(nome, duracao_min, preco), profissionais(nome)")
@@ -54,13 +54,10 @@ export default async function InicioPage({
       .not("status", "eq", "cancelado")
       .order("data").order("hora")
       .limit(1),
-    supabase
-      .from("servicos")
-      .select("id, nome, categoria, duracao_min, preco")
-      .eq("salao_id", config.id).eq("ativo", true).gt("preco", 0)
-      .order("nome").limit(6),
+    supabase.rpc("get_servicos_portal", { p_slug: slug }),
   ]);
 
+  const servicos = ((servicosRaw as any[]) ?? []).filter((s) => s.preco > 0).slice(0, 6);
   const primeiroNome = (cliente?.nome ?? user.email?.split("@")[0] ?? "").split(" ")[0];
   const proximoAg = proximos?.[0] ?? null;
 

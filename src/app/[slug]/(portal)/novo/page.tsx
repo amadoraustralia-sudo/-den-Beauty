@@ -10,18 +10,15 @@ export default async function NovoAgendamentoPage({
   const { slug } = await params;
   const supabase = await createClient();
 
-  const { data: config } = await supabase
-    .from("configuracoes").select("id").eq("slug", slug).single();
+  const { data: configRows } = await supabase.rpc("get_configuracoes_portal", { p_slug: slug });
+  const config = (configRows as any[])?.[0] ?? null;
   if (!config) notFound();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: servicos }, { data: profissionais }] = await Promise.all([
-    supabase.from("servicos")
-      .select("id, nome, categoria, duracao_min, preco")
-      .eq("salao_id", config.id).eq("ativo", true).gt("preco", 0)
-      .order("categoria").order("nome"),
+  const [{ data: servicosRaw }, { data: profissionais }] = await Promise.all([
+    supabase.rpc("get_servicos_portal", { p_slug: slug }),
     supabase.from("profissionais")
       .select("id, nome, especialidades")
       .eq("salao_id", config.id).eq("ativo", true)
@@ -77,7 +74,7 @@ export default async function NovoAgendamentoPage({
       </div>
 
       <BookingFlow
-        servicos={servicos ?? []}
+        servicos={((servicosRaw as any[]) ?? []).filter((s) => s.preco > 0)}
         profissionais={profissionais ?? []}
         clienteId={clienteId}
         clienteNome={clienteNome}

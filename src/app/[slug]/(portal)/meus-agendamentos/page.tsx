@@ -88,8 +88,8 @@ export default async function MeusAgendamentosPage({
   const { aba = "proximos" } = await searchParams;
   const supabase = await createClient();
 
-  const { data: config } = await supabase
-    .from("configuracoes").select("id").eq("slug", slug).single();
+  const { data: configRows } = await supabase.rpc("get_configuracoes_portal", { p_slug: slug });
+  const config = (configRows as any[])?.[0] ?? null;
   if (!config) notFound();
 
   const { data: { user } } = await supabase.auth.getUser();
