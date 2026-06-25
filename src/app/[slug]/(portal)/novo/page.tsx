@@ -17,13 +17,20 @@ export default async function NovoAgendamentoPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: servicosRaw }, { data: profissionais }] = await Promise.all([
+  const hoje = new Date().toISOString().split("T")[0];
+  const [{ data: servicosRaw }, { data: profissionais }, { data: bloqueiosDatas }] = await Promise.all([
     supabase.rpc("get_servicos_portal", { p_slug: slug }),
     supabase.from("profissionais")
       .select("id, nome, especialidades")
       .eq("salao_id", config.id).eq("ativo", true)
       .order("nome"),
+    supabase.from("horarios_bloqueados")
+      .select("data")
+      .eq("salao_id", config.id)
+      .is("profissional_id", null)
+      .gte("data", hoje),
   ]);
+  const datasFechadas = [...new Set((bloqueiosDatas ?? []).map((b: { data: string }) => b.data))];
 
   // Resolve cliente — tenta por auth_user_id, depois por email, depois auto-cria
   let clienteId: string | null = null;
@@ -89,6 +96,7 @@ export default async function NovoAgendamentoPage({
         isLogado={true}
         salaoId={config.id}
         diasFuncionamento={diasFuncionamento}
+        datasFechadas={datasFechadas}
         successRedirect={`/${slug}/meus-agendamentos`}
       />
     </div>

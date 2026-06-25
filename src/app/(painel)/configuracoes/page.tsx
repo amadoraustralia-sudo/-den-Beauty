@@ -7,6 +7,7 @@ import UnsavedChangesGuard from "@/components/UnsavedChangesGuard";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import PhoneInput from "@/components/PhoneInput";
 import LogoUpload from "@/components/LogoUpload";
+import DatasFechadasForm from "./DatasFechadasForm";
 
 const DIAS = [
   { key: "seg", label: "Segunda" },
@@ -26,12 +27,18 @@ export default async function ConfiguracoesPage({
   const { erro } = await searchParams;
   const supabase = await createClient();
 
-  const [config, { data: profissionais }] = await Promise.all([
+  const [config, { data: profissionais }, { data: datasFechadasRaw }] = await Promise.all([
     getSalon(),
     supabase.from("profissionais")
       .select("id, nome, cargo, email, ativo")
       .order("nome"),
+    supabase.from("horarios_bloqueados")
+      .select("id, data, motivo")
+      .is("profissional_id", null)
+      .gte("data", new Date().toISOString().split("T")[0])
+      .order("data"),
   ]);
+  const datasFechadas = (datasFechadasRaw ?? []) as { id: string; data: string; motivo: string | null }[];
 
   const diasAtivos: string[] = config?.dias_funcionamento ?? ["seg", "ter", "qua", "qui", "sex", "sab"];
   const horariosSemana: Record<string, { ativo: boolean; abre: string; fecha: string; intervalo_inicio?: string; intervalo_fim?: string }> =
@@ -213,6 +220,9 @@ export default async function ConfiguracoesPage({
                   </table>
                 </div>
               </div>
+
+              {/* Datas fechadas */}
+              <DatasFechadasForm datasFechadas={datasFechadas} />
 
               {/* Link de agendamento */}
               <div className="card p-5">

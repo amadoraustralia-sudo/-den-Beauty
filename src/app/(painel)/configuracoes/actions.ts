@@ -5,6 +5,43 @@ import { getSalon } from "@/lib/supabase/salon";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+export async function adicionarDataFechada(formData: FormData): Promise<{ error?: string }> {
+  const data = (formData.get("data") as string)?.trim();
+  const motivo = (formData.get("motivo") as string)?.trim() || null;
+  if (!data) return { error: "Data obrigatória" };
+
+  const supabase = await createClient();
+  const salon = await getSalon();
+  if (!salon?.id) return { error: "Salão não encontrado" };
+
+  const { error } = await supabase.from("horarios_bloqueados").insert({
+    salao_id: salon.id,
+    profissional_id: null,
+    data,
+    hora_inicio: "00:00",
+    hora_fim: "23:59",
+    motivo,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/configuracoes");
+  return {};
+}
+
+export async function removerDataFechada(id: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const salon = await getSalon();
+  if (!salon?.id) return { error: "Salão não encontrado" };
+  const { error } = await supabase
+    .from("horarios_bloqueados")
+    .delete()
+    .eq("id", id)
+    .eq("salao_id", salon.id)
+    .is("profissional_id", null);
+  if (error) return { error: error.message };
+  revalidatePath("/configuracoes");
+  return {};
+}
+
 export async function salvarLogoUrl(logoUrl: string): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

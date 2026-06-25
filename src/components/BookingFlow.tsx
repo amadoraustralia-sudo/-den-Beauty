@@ -16,6 +16,7 @@ interface Props {
   isLogado: boolean;
   salaoId?: string | null;
   diasFuncionamento?: string[] | null;
+  datasFechadas?: string[] | null;
   successRedirect?: string;
   // M1: rotas do portal configuráveis (default = portal /agendar)
   loginHref?: string;
@@ -47,7 +48,7 @@ const STEP_LABELS: Record<Step, string> = {
 
 const DAY_KEYS = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
 
-export default function BookingFlow({ servicos, profissionais, clienteId, clienteNome, isLogado, salaoId, diasFuncionamento, successRedirect, loginHref, cadastroHref }: Props) {
+export default function BookingFlow({ servicos, profissionais, clienteId, clienteNome, isLogado, salaoId, diasFuncionamento, datasFechadas, successRedirect, loginHref, cadastroHref }: Props) {
   const router = useRouter();
   // M1: defaults apontam para o portal /agendar/*
   const LOGIN_HREF = loginHref ?? "/agendar/login";
@@ -81,11 +82,14 @@ export default function BookingFlow({ servicos, profissionais, clienteId, client
   }
   const hoje = new Date();
   const diasAtivos = diasFuncionamento ?? ["seg", "ter", "qua", "qui", "sex", "sab"];
+  const fechadasSet = new Set(datasFechadas ?? []);
   const datas: string[] = [];
-  for (let i = 0; i <= 29; i++) {
+  for (let i = 0; i <= 59; i++) {
     const d = new Date(hoje); d.setDate(hoje.getDate() + i);
-    if (diasAtivos.includes(DAY_KEYS[d.getDay()])) {
-      datas.push(toLocalDateStr(d));
+    const ds = toLocalDateStr(d);
+    if (diasAtivos.includes(DAY_KEYS[d.getDay()]) && !fechadasSet.has(ds)) {
+      datas.push(ds);
+      if (datas.length >= 30) break;
     }
   }
 
