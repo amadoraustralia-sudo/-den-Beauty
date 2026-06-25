@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getSalaoId } from "@/lib/supabase/salon";
 import Topbar from "@/components/Topbar";
 import AgendaView from "@/components/AgendaView";
 import Link from "next/link";
@@ -16,7 +17,10 @@ function getMondayOfWeek(dateStr: string) {
 export default async function AgendaPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const [{ data: { user } }, salao_id] = await Promise.all([
+    supabase.auth.getUser(),
+    getSalaoId(),
+  ]);
   const hoje = params.data ?? new Date().toISOString().split("T")[0];
 
   const monday = getMondayOfWeek(hoje);
@@ -44,6 +48,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
     supabase
       .from("profissionais")
       .select("id, nome")
+      .eq("salao_id", salao_id ?? "")
       .eq("ativo", true)
       .order("nome"),
     supabase
