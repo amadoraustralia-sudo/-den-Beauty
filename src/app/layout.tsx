@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -9,7 +8,8 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const nonce = (await headers()).get("x-nonce") ?? "";
+  // Lê o header para manter o layout dinâmico (necessário para o nonce do middleware ser aplicado)
+  await headers();
 
   return (
     <html lang="pt-BR" className="h-full">
@@ -23,8 +23,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="h-full">
         {children}
-        {/* nonce repassado ao Next.js para carimbar scripts de hidratação */}
-        {nonce && <Script id="__nonce" nonce={nonce} strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: "" }} />}
       </body>
     </html>
   );

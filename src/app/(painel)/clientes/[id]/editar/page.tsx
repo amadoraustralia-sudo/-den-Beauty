@@ -32,10 +32,7 @@ export default function EditarClientePage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient();
-      const [{ data: cliente }, { data: profs }] = await Promise.all([
-        supabase.from("clientes").select("*").eq("id", id).single(),
-        supabase.from("profissionais").select("id, nome").eq("ativo", true).order("nome"),
-      ]);
+      const { data: cliente } = await supabase.from("clientes").select("*").eq("id", id).single();
       if (cliente) {
         setFields({
           nome: cliente.nome ?? "",
@@ -46,8 +43,11 @@ export default function EditarClientePage() {
           preferencias: cliente.preferencias ?? "",
           profissional_preferido_id: cliente.profissional_preferido_id ?? "",
         });
+        const { data: profs } = await supabase
+          .from("profissionais").select("id, nome")
+          .eq("salao_id", cliente.salao_id).eq("ativo", true).order("nome");
+        setProfissionais(profs ?? []);
       }
-      setProfissionais(profs ?? []);
       setLoading(false);
     }
     load();

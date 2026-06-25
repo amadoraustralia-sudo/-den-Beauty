@@ -63,11 +63,15 @@ export default function EditarAgendamentoPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient();
-      const [{ data: ag }, { data: cls }, { data: svcs }, { data: profs }] = await Promise.all([
+      const [{ data: ag }, { data: profile }, { data: svcs }] = await Promise.all([
         supabase.from("agendamentos").select("*").eq("id", id).single(),
-        supabase.from("clientes").select("id, nome").order("nome"),
+        supabase.from("profiles").select("salao_id").single(),
         supabase.from("servicos").select("id, nome, preco, duracao_min").eq("ativo", true).order("nome"),
-        supabase.from("profissionais").select("id, nome").eq("ativo", true).order("nome"),
+      ]);
+      const sid = profile?.salao_id ?? ag?.salao_id ?? "";
+      const [{ data: cls }, { data: profs }] = await Promise.all([
+        supabase.from("clientes").select("id, nome").eq("salao_id", sid).order("nome"),
+        supabase.from("profissionais").select("id, nome").eq("salao_id", sid).eq("ativo", true).order("nome"),
       ]);
       if (ag) {
         setSalaoId(ag.salao_id ?? null);
