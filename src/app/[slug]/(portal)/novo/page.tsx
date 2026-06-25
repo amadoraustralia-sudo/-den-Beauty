@@ -64,6 +64,14 @@ export default async function NovoAgendamentoPage({
     if (criado) { clienteId = criado.id; clienteNome = criado.nome; }
   }
 
+  // Deriva dias ativos: prefere horarios_semana (mais granular), cai em dias_funcionamento
+  const horariosSemana = (config as any).horarios_semana as Record<string, { ativo?: boolean }> | null;
+  const diasFuncionamento: string[] = horariosSemana
+    ? Object.entries(horariosSemana)
+        .filter(([, v]) => v.ativo !== false)
+        .map(([k]) => k)
+    : ((config as any).dias_funcionamento as string[] | null) ?? ["seg", "ter", "qua", "qui", "sex", "sab"];
+
   return (
     <div className="p-4 lg:p-8 max-w-2xl mx-auto">
       <div className="mb-6">
@@ -80,6 +88,7 @@ export default async function NovoAgendamentoPage({
         clienteNome={clienteNome}
         isLogado={true}
         salaoId={config.id}
+        diasFuncionamento={diasFuncionamento}
         successRedirect={`/${slug}/meus-agendamentos`}
       />
     </div>
