@@ -177,31 +177,37 @@ export default function Sidebar({ initialLogoUrl, initialSalonName }: SidebarPro
       style={{ backgroundColor: "var(--brand-800)", borderRight: "1px solid rgb(255 255 255 / 0.06)" }}
     >
       {/* Logo */}
-      <div className="px-5 py-5 border-b flex items-center justify-between" style={{ borderColor: "rgb(255 255 255 / 0.08)" }}>
-        <div className="flex items-center gap-3">
+      <div className="px-5 py-4 border-b" style={{ borderColor: "rgb(255 255 255 / 0.08)" }}>
+        <div className="flex items-center justify-between gap-2">
           {salonLogoUrl ? (
-            <img src={salonLogoUrl} alt={salonName} style={{ height: 32, maxWidth: 80, objectFit: "contain", borderRadius: 6, flexShrink: 0 }} />
+            <img
+              src={salonLogoUrl}
+              alt={salonName}
+              style={{ height: 56, maxWidth: 170, objectFit: "contain", borderRadius: 4, flexShrink: 0 }}
+            />
           ) : (
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-400)" }}>
-              <span className="text-xs font-bold" style={{ color: "white" }}>{salonInitials}</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-400)" }}>
+                <span className="text-xs font-bold" style={{ color: "white" }}>{salonInitials}</span>
+              </div>
+              <div className="min-w-0">
+                <p className="font-bold text-sm leading-none tracking-wide truncate" style={{ color: "white" }}>{salonName}</p>
+                <p className="text-xs mt-0.5" style={{ color: "rgb(255 255 255 / 0.4)" }}>Gestão</p>
+              </div>
             </div>
           )}
-          <div>
-            <p className="font-bold text-sm leading-none tracking-wide" style={{ color: "white" }}>{salonName}</p>
-            <p className="text-xs mt-0.5" style={{ color: "rgb(255 255 255 / 0.4)" }}>Gestão</p>
-          </div>
+          {/* Botão fechar no mobile */}
+          <button
+            className="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
+            style={{ color: "rgb(255 255 255 / 0.6)" }}
+            onClick={() => setMobileOpen(false)}
+            aria-label="Fechar menu"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
-        {/* Botão fechar no mobile */}
-        <button
-          className="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg"
-          style={{ color: "rgb(255 255 255 / 0.6)" }}
-          onClick={() => setMobileOpen(false)}
-          aria-label="Fechar menu"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
       </div>
 
       {/* Nav */}

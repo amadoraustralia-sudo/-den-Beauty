@@ -54,21 +54,24 @@ export default function LogoUpload({ salaoId, currentUrl }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-4">
-      {imgSrc && (
-        <img
-          src={imgSrc}
-          alt="Logo"
-          style={{
-            height: 56,
-            maxWidth: 120,
-            objectFit: "contain",
-            borderRadius: 8,
-            border: "1px solid var(--border)",
-          }}
-        />
-      )}
-      <div>
+    <div className="space-y-3">
+      {/* Preview simulando o sidebar */}
+      <div
+        className="flex items-center gap-3 rounded-xl px-4 py-3"
+        style={{ background: "var(--brand-800)", width: "fit-content", minWidth: 220 }}
+      >
+        {imgSrc ? (
+          <img
+            src={imgSrc}
+            alt="Logo"
+            style={{ height: 56, maxWidth: 170, objectFit: "contain", borderRadius: 4 }}
+          />
+        ) : (
+          <p className="text-xs" style={{ color: "rgb(255 255 255 / 0.4)" }}>Prévia do logo no menu</p>
+        )}
+      </div>
+
+      <div className="flex items-center gap-3">
         <label
           className="btn btn-secondary"
           style={{ fontSize: "0.8125rem", padding: "0.375rem 0.75rem", cursor: "pointer" }}
@@ -82,15 +85,18 @@ export default function LogoUpload({ salaoId, currentUrl }: Props) {
             disabled={uploading}
           />
         </label>
-        {erro && (
-          <p className="text-xs mt-1" style={{ color: "var(--danger)" }}>
-            {erro}
-          </p>
+        {baseUrl && (
+          <span className="text-xs" style={{ color: "var(--success, #16a34a)" }}>✓ Logo salvo</span>
         )}
-        <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-          PNG, JPG ou SVG · recomendado 200×80px
-        </p>
       </div>
+
+      {erro && (
+        <p className="text-xs" style={{ color: "var(--danger)" }}>{erro}</p>
+      )}
+      <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+        PNG, JPG ou SVG com fundo transparente · recomendado 400×120px (horizontal)
+      </p>
+
       <input type="hidden" name="logo_url" value={baseUrl} />
     </div>
   );
