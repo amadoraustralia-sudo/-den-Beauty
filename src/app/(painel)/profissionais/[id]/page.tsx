@@ -23,7 +23,7 @@ export default async function ProfissionalDetailPage({
   searchParams: Promise<{ aba?: string; mes?: string }>;
 }) {
   const { id } = await params;
-  const { aba = "historico", mes } = await searchParams;
+  const { aba = "atividades", mes } = await searchParams;
 
   const supabase = await createClient();
   const mesAtual = mes ?? new Date().toISOString().slice(0, 7);
@@ -66,6 +66,19 @@ export default async function ProfissionalDetailPage({
     return d.toISOString().slice(0, 7);
   });
 
+  // Dados da aba Atividades
+  const agendMes = agendamentos?.filter((a) => a.data?.startsWith(mesAtual)) ?? [];
+  const servicosRealizadosMes = agendMes.filter((a) => a.status === "concluido");
+  const faltasMes = agendMes.filter((a) => a.status === "cancelado");
+  const atividadesMes = [...agendMes].sort(
+    (a, b) => b.data.localeCompare(a.data) || (b.hora ?? "").localeCompare(a.hora ?? "")
+  );
+  const valorRealizadoMes = servicosRealizadosMes.reduce((acc, a) => {
+    const svc = Array.isArray(a.servicos) ? a.servicos[0] : a.servicos;
+    return acc + Number(a.valor ?? (svc as { preco: number } | null)?.preco ?? 0);
+  }, 0);
+  const valorReceberMes = valorRealizadoMes * ((prof.percentual_comissao ?? 50) / 100);
+
   const { data: salaoConfig } = await supabase.from("profiles").select("salao_id").eq("id", (await supabase.auth.getUser()).data.user?.id ?? "").single();
   const salaoId = salaoConfig?.salao_id ?? null;
 
@@ -77,8 +90,9 @@ export default async function ProfissionalDetailPage({
     .order("data").order("hora_inicio");
 
   const tabs = [
+    { key: "atividades", label: "Atividades" },
     { key: "historico",  label: "Histórico" },
-    { key: "comissoes",  label: "Comissões do mês" },
+    { key: "comissoes",  label: "Comissões" },
     { key: "bloqueios",  label: "Horários bloqueados" },
   ];
 
@@ -172,6 +186,101 @@ export default async function ProfissionalDetailPage({
               </Link>
             ))}
           </div>
+
+          {/* Aba: Atividades */}
+          {aba === "atividades" && (
+            <div>
+              {/* Seletor de mês */}
+              <div className="flex items-center gap-3 px-5 py-3 flex-wrap" style={{ borderBottom: "1px solid var(--border)" }}>
+                <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Período:</span>
+                <div className="flex gap-1 flex-wrap">
+                  {mesesDisponiveis.map((m) => (
+                    <Link
+                      key={m}
+                      href={`/profissionais/${id}?aba=atividades&mes=${m}`}
+                      className="px-2.5 py-1 rounded-lg text-xs font-medium"
+                      style={{
+                        background: mesAtual === m ? "var(--brand-600)" : "var(--surface-raised)",
+                        color: mesAtual === m ? "white" : "var(--text-secondary)",
+                        textDecoration: "none",
+                      }}
+                    >
+                      {new Date(m + "-15").toLocaleDateString("pt-BR", { month: "short", year: "2-digit" })}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* KPIs */}
+              <div className="grid grid-cols-3 gap-4 p-5" style={{ borderBottom: "1px solid var(--border)" }}>
+                <div className="text-center">
+                  <p className="text-2xl font-bold" style={{ color: "var(--brand-700)" }}>
+                    {servicosRealizadosMes.length}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>serviços realizados</p>
+                </div>
+                <div className="text-center" style={{ borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}>
+                  <p className="text-2xl font-bold" style={{ color: faltasMes.length > 0 ? "var(--danger)" : "var(--text-muted)" }}>
+                    {faltasMes.length}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>faltas / cancelamentos</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold" style={{ color: "var(--success)" }}>
+                    R$ {valorReceberMes.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>valor a receber</p>
+                </div>
+              </div>
+
+              {/* Lista de atividades do mês */}
+              {atividadesMes.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-state-icon">📅</div>
+                  <p className="empty-state-title">Nenhuma atividade neste período</p>
+                  <p className="empty-state-desc">Os atendimentos do mês aparecerão aqui.</p>
+                </div>
+              ) : (
+                <div>
+                  {atividadesMes.map((a, i) => {
+                    const st = statusBadge[a.status] ?? { cls: "badge badge-gray", label: a.status };
+                    const svc = Array.isArray(a.servicos) ? a.servicos[0] : a.servicos;
+                    const valor = a.valor ?? (svc as { preco: number } | null)?.preco;
+                    const nomeServico = (svc as { nome: string } | null)?.nome ?? "—";
+                    const nomeCliente = (a.clientes as unknown as { nome: string } | null)?.nome ?? "—";
+                    const isCancelado = a.status === "cancelado";
+                    return (
+                      <div
+                        key={a.id}
+                        className="flex items-center gap-4 px-5 py-3.5"
+                        style={{
+                          borderBottom: i < atividadesMes.length - 1 ? "1px solid var(--border)" : "none",
+                          opacity: isCancelado ? 0.65 : 1,
+                        }}
+                      >
+                        <div className="flex-shrink-0" style={{ minWidth: 56 }}>
+                          <p className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
+                            {new Date(a.data + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                          </p>
+                          <p className="text-xs font-mono" style={{ color: "var(--brand-600)" }}>{a.hora?.slice(0, 5)}</p>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{nomeCliente}</p>
+                          <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{nomeServico}</p>
+                        </div>
+                        <span className={st.cls}>{st.label}</span>
+                        {valor && !isCancelado && (
+                          <span className="text-sm font-medium flex-shrink-0" style={{ color: "var(--text-secondary)" }}>
+                            R$ {Number(valor).toFixed(2).replace(".", ",")}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Aba: Histórico */}
           {aba === "historico" && (
