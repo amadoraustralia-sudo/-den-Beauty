@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import FormCard from "@/components/FormCard";
-import { atualizarCliente } from "./actions";
+import { atualizarCliente, excluirCliente } from "./actions";
 import { createClient } from "@/lib/supabase/client";
 import { formatPhone } from "@/lib/format";
 
@@ -23,6 +23,9 @@ export default function EditarClientePage() {
   const [erros, setErros] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState("");
   const [pending, setPending] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   function set(field: string, value: string) {
     setFields((f) => ({ ...f, [field]: value }));
@@ -135,6 +138,68 @@ export default function EditarClientePage() {
           <button type="submit" className="btn btn-primary" disabled={pending}>{pending ? "Salvando..." : "Salvar alterações"}</button>
         </div>
       </form>
+
+      <div className="mt-8 pt-6" style={{ borderTop: "1px solid var(--border)" }}>
+        <p className="text-xs font-semibold mb-3" style={{ color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          Zona de perigo
+        </p>
+
+        {deleteError && (
+          <div className="mb-3 rounded-xl p-3.5" style={{ background: "#fff5f5", border: "1px solid #fecaca" }}>
+            <p className="text-sm" style={{ color: "#b91c1c" }}>{deleteError}</p>
+          </div>
+        )}
+
+        {!confirmDelete ? (
+          <button
+            type="button"
+            onClick={() => { setDeleteError(""); setConfirmDelete(true); }}
+            className="btn"
+            style={{ color: "var(--danger)", border: "1px solid #fecaca", background: "transparent", fontSize: "0.8125rem" }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
+              <path d="M9 6V4h6v2"/>
+            </svg>
+            Excluir cliente
+          </button>
+        ) : (
+          <div className="rounded-xl p-4" style={{ background: "#fff5f5", border: "1px solid #fecaca" }}>
+            <p className="text-sm font-medium mb-1" style={{ color: "#b91c1c" }}>Tem certeza que deseja excluir este cliente?</p>
+            <p className="text-xs mb-4" style={{ color: "#ef4444" }}>
+              Esta ação é permanente e não pode ser desfeita. O histórico de atendimentos vinculado será mantido.
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="btn btn-secondary"
+                style={{ fontSize: "0.8125rem" }}
+                disabled={deleting}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={async () => {
+                  setDeleting(true);
+                  const result = await excluirCliente(id);
+                  if (result?.error) {
+                    setDeleteError(result.error);
+                    setConfirmDelete(false);
+                  }
+                  setDeleting(false);
+                }}
+                className="btn"
+                style={{ background: "var(--danger)", color: "#fff", fontSize: "0.8125rem", border: "none" }}
+              >
+                {deleting ? "Excluindo..." : "Sim, excluir"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </FormCard>
   );
 }
