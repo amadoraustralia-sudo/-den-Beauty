@@ -179,23 +179,23 @@ export default function Sidebar({ initialLogoUrl, initialSalonName }: SidebarPro
       {/* Logo */}
       <div className="px-5 py-4 border-b" style={{ borderColor: "rgb(255 255 255 / 0.08)" }}>
         <div className="flex items-center justify-between gap-2">
-          {salonLogoUrl ? (
-            <img
-              src={salonLogoUrl}
-              alt={salonName}
-              style={{ height: 56, maxWidth: 170, objectFit: "contain", borderRadius: 4, flexShrink: 0 }}
-            />
-          ) : (
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-400)" }}>
+          <div className="flex items-center gap-3 min-w-0">
+            {salonLogoUrl ? (
+              <img
+                src={salonLogoUrl}
+                alt={salonName}
+                style={{ height: 36, width: 36, objectFit: "contain", borderRadius: 6, flexShrink: 0 }}
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-400)" }}>
                 <span className="text-xs font-bold" style={{ color: "white" }}>{salonInitials}</span>
               </div>
-              <div className="min-w-0">
-                <p className="font-bold text-sm leading-none tracking-wide truncate" style={{ color: "white" }}>{salonName}</p>
-                <p className="text-xs mt-0.5" style={{ color: "rgb(255 255 255 / 0.4)" }}>Gestão</p>
-              </div>
+            )}
+            <div className="min-w-0">
+              <p className="font-bold text-sm leading-none tracking-wide truncate" style={{ color: "white" }}>{salonName}</p>
+              <p className="text-xs mt-0.5" style={{ color: "rgb(255 255 255 / 0.4)" }}>Gestão</p>
             </div>
-          )}
+          </div>
           {/* Botão fechar no mobile */}
           <button
             className="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
