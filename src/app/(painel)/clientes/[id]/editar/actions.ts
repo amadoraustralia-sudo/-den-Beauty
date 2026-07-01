@@ -4,6 +4,37 @@ import { createClient } from "@/lib/supabase/server";
 import { getSalaoId } from "@/lib/supabase/salon";
 import { redirect } from "next/navigation";
 
+export async function excluirCliente(clienteId: string) {
+  const salao_id = await getSalaoId();
+  if (!salao_id) redirect("/login");
+
+  const supabase = await createClient();
+
+  const { count } = await supabase
+    .from("agendamentos")
+    .select("id", { count: "exact", head: true })
+    .eq("cliente_id", clienteId);
+
+  if (count && count > 0) {
+    return {
+      error: `Este cliente possui ${count} agendamento(s) registrado(s) e não pode ser excluído. Cancele os agendamentos antes de excluir o cliente.`,
+    };
+  }
+
+  const { error } = await supabase
+    .from("clientes")
+    .delete()
+    .eq("id", clienteId)
+    .eq("salao_id", salao_id);
+
+  if (error) {
+    console.error("[excluirCliente]", error.code, error.message);
+    return { error: "Erro ao excluir cliente. Tente novamente." };
+  }
+
+  redirect("/clientes?toast=excluido");
+}
+
 export async function atualizarCliente(formData: FormData) {
   const id   = (formData.get("id") as string)?.trim();
   const nome = (formData.get("nome") as string)?.trim();
