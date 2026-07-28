@@ -22,9 +22,9 @@ const DIAS = [
 export default async function ConfiguracoesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string }>;
+  searchParams: Promise<{ erro?: string; toast?: string }>;
 }) {
-  const { erro } = await searchParams;
+  const { erro, toast } = await searchParams;
   const supabase = await createClient();
 
   const [config, { data: profissionais }, { data: datasFechadasRaw }] = await Promise.all([
@@ -39,6 +39,11 @@ export default async function ConfiguracoesPage({
       .order("data"),
   ]);
   const datasFechadas = (datasFechadasRaw ?? []) as { id: string; data: string; motivo: string | null }[];
+
+  // Eva (secretária no WhatsApp): número guardado com '55' na frente; exibe só o local.
+  const evaAtiva = (config as { eva_ativa?: boolean })?.eva_ativa ?? false;
+  const whatsappGestora = (config as { whatsapp_gestora?: string | null })?.whatsapp_gestora ?? "";
+  const whatsappGestoraLocal = whatsappGestora.startsWith("55") ? whatsappGestora.slice(2) : whatsappGestora;
 
   const diasAtivos: string[] = config?.dias_funcionamento ?? ["seg", "ter", "qua", "qui", "sex", "sab"];
   const horariosSemana: Record<string, { ativo: boolean; abre: string; fecha: string; intervalo_inicio?: string; intervalo_fim?: string }> =
@@ -60,6 +65,21 @@ export default async function ConfiguracoesPage({
         {erro === "nome" && (
           <div className="mb-6 rounded-xl p-4" style={{ background: "#fff5f5", border: "1px solid #fecaca" }}>
             <p className="text-sm" style={{ color: "#b91c1c" }}>O nome do estabelecimento é obrigatório.</p>
+          </div>
+        )}
+        {erro === "whatsapp" && (
+          <div className="mb-6 rounded-xl p-4" style={{ background: "#fff5f5", border: "1px solid #fecaca" }}>
+            <p className="text-sm" style={{ color: "#b91c1c" }}>WhatsApp da gestora inválido. Informe DDD + número (10 ou 11 dígitos).</p>
+          </div>
+        )}
+        {erro === "whatsapp_instancia" && (
+          <div className="mb-6 rounded-xl p-4" style={{ background: "#fff5f5", border: "1px solid #fecaca" }}>
+            <p className="text-sm" style={{ color: "#b91c1c" }}>Esse é o número da própria Eva. Use o seu WhatsApp pessoal para ser atendida no privado.</p>
+          </div>
+        )}
+        {toast === "eva_pendente" && (
+          <div className="mb-6 rounded-xl p-4" style={{ background: "#fffbeb", border: "1px solid #fde68a" }}>
+            <p className="text-sm" style={{ color: "#92400e" }}>Configurações salvas. A ativação da Eva ficou pendente (não consegui falar com o servidor dela agora) — ela entra em contato assim que o serviço voltar.</p>
           </div>
         )}
 
@@ -95,6 +115,21 @@ export default async function ConfiguracoesPage({
                     <input name="endereco" className="input" defaultValue={config?.endereco ?? ""} placeholder="Rua das Flores, 123 — São Paulo, SP" />
                   </div>
                 </div>
+              </div>
+
+              {/* Eva — secretária no WhatsApp */}
+              <div className="card p-6">
+                <div className="flex items-center justify-between mb-1">
+                  <h3>Eva — sua secretária no WhatsApp</h3>
+                  <span className={`badge ${evaAtiva ? "badge-green" : "badge-gray"}`}>
+                    {evaAtiva ? "Eva ativa ✓" : "Inativa"}
+                  </span>
+                </div>
+                <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
+                  Cadastre seu WhatsApp e a Eva te atende no privado: agendamentos, caixa, consultas — direto com você.
+                </p>
+                <label className="label">Seu WhatsApp</label>
+                <PhoneInput name="whatsapp_gestora" defaultValue={whatsappGestoraLocal} />
               </div>
 
               {/* Agendamento online */}
